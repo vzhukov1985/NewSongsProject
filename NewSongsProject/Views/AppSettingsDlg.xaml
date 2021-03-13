@@ -1,0 +1,107 @@
+﻿<Window x:Class="NewSongsProject.Views.AppSettingsDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NewSongsProject.Views"
+        xmlns:vm="clr-namespace:NewSongsProject.ViewModels"
+        xmlns:conv="clr-namespace:NewSongsProject.Converters"
+        mc:Ignorable="d"
+        Title="Настройки приложения" Height="460" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+
+    <Window.DataContext>
+        <vm:AppSettingsDlgVM/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <conv:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Style="{StaticResource DialogHeader}"
+                   Text="Настройки приложения"/>
+
+        <Grid  Grid.Row="1"
+               Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,5"
+                       Text="Категории:"/>
+            <ItemsControl Grid.Row="1"
+                          ItemsSource="{Binding Categories}" 
+                          AlternationCount="100">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="30">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0}.}"/>
+
+                            <TextBox Grid.Column="1"
+                                     Margin="5,0,0,0"
+                                     Height="23"
+                                     IsEnabled="{Binding IsChangeable}"
+                                     Foreground="{Binding Color, Converter={StaticResource ColorToBrushConverter}}"
+                                     Text="{Binding Name}"/>
+
+                            <Button Grid.Column="2"
+                                    Height="23"
+                                    Width="100"
+                                    HorizontalAlignment="Left"
+                                    IsEnabled="{Binding IsChangeable}"
+                                    Content="Выбрать цвет..."
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Window, Mode=FindAncestor}, Path=DataContext.ShowSelectColorDialogCmd }"
+                                    CommandParameter="{Binding .}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+
+            </ItemsControl>
+        </Grid>
+
+        <StackPanel Grid.Row="2"
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+
+            <Button Width="100"
+                    Height="30"
+                    IsDefault="True"
+                    Click="Button_Click"
+                    Content="Сохранить"/>
+
+            <Button Width="90"
+                    Height="30"
+                    Margin="20,0,0,0"
+                    IsCancel="True"
+                    Content="Отмена"/>
+
+        </StackPanel>
+    </Grid>
+</Window>

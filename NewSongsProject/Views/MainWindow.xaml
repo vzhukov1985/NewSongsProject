@@ -1,0 +1,152 @@
+﻿<Window x:Class="NewSongsProject.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NewSongsProject"
+        xmlns:vm="clr-namespace:NewSongsProject.ViewModels"
+        xmlns:conv="clr-namespace:NewSongsProject.Converters"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:uc="clr-namespace:NewSongsProject.UserControls"
+        mc:Ignorable="d"
+        x:Name="MainWnd"
+        Title="MainWindow" 
+        Height="{Binding MainWindowHeight, Mode=TwoWay}" 
+        Width="{Binding MainWindowWidth, Mode=TwoWay}" 
+        Left="{Binding MainWindowX, Mode=TwoWay}" 
+        Top="{Binding MainWindowY, Mode=TwoWay}"
+        PreviewKeyDown="MainWindow_PreviewKeyDown" 
+        PreviewTextInput="MainWnd_TextInput"
+        Loaded="MainWnd_Loaded">
+
+    <Window.DataContext>
+        <vm:MainWindowVM/>
+    </Window.DataContext> 
+
+    <Window.Resources>
+        <conv:ItemTypeToFontConverter x:Key="ItemTypeToFontConverter"/>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="Home" Command="{Binding SelectFirstTrackCmd}"/>
+
+        <KeyBinding Key="Return" Command="{Binding ProcessTrackListItemCmd}"/>
+
+        <KeyBinding Key="Backspace" Command="{Binding RemoveSymbolSearchCmd}"/>
+        <KeyBinding Key="Backspace" Modifiers="Ctrl" Command="{Binding UpFolderCmd}"/>
+
+        <KeyBinding Key="Esc" Command="{Binding ClearSearchCmd}"/>
+
+        <KeyBinding Key="F1" Modifiers="Ctrl" Command="{Binding ShowTrackPropertiesCmd}"/>
+
+    </Window.InputBindings>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closed" >
+            <i:InvokeCommandAction Command="{Binding SaveSettingsCmd}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ListView Grid.Column="0"
+                  ItemsSource="{Binding TrackList}" 
+                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                  SelectionChanged="TrackListView_SelectionChanged"
+                  IsSynchronizedWithCurrentItem="True"
+                  SelectedItem="{Binding SelectedTrackListItem}"
+                  Name="TrackList">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Vertical" 
+                               IsItemsHost="True" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Caption}" 
+                               FontWeight="{Binding IsDirectory, Converter={StaticResource ItemTypeToFontConverter}}"
+                               FontSize="{Binding DataContext.TrackListFontSize, RelativeSource={RelativeSource AncestorType=Window, Mode=FindAncestor}}">
+                            <TextBlock.InputBindings>
+                                <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ElementName=MainWnd, Path=DataContext.ProcessTrackListItemCmd}"/>
+                            </TextBlock.InputBindings>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Свойства"
+                              Command="{Binding ShowTrackPropertiesCmd}"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+            </ListView>
+
+            <Grid Grid.Column="1"
+              Background="LightGray">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" 
+                        Orientation="Horizontal"
+                        Margin="7,5,7,5">
+
+                    <TextBlock Text="Поиск:"/>
+
+                    <TextBlock Width="150"
+                           HorizontalAlignment="Left"
+                           FontWeight="Bold"
+                           Text="{Binding SearchText, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                       HorizontalAlignment="Center"
+                       Text="Открытый трек:"/>
+
+                <TextBlock Grid.Row="2"
+                       HorizontalAlignment="Center"
+                       Text="{Binding OpenedTrack}"/>
+
+                <TextBlock Grid.Row="3"
+                       HorizontalAlignment="Center"
+                       Text="{Binding IsPlaying}"/>
+
+                <TextBlock Grid.Row="4"
+                       HorizontalAlignment="Center"
+                       Text="Следующий трек:"/>
+
+                <TextBlock Grid.Row="5"
+                       HorizontalAlignment="Center"
+                       Text="{Binding SelectedTrackListItem.Caption}"/>
+
+                <CheckBox Grid.Row="6"
+                      Margin="7,5,0,5"
+                      Content="Режим выступления"
+                      Foreground="Red"
+                      IsChecked="{Binding PerformanceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      HorizontalAlignment="Left"/>
+
+                <Button Grid.Row="7"
+                    Margin=" 7,5,7,5"
+                    Content="Настройки"
+                    Command="{Binding ShowAppSettingsCmd}"/>
+            </Grid>
+        </Grid>
+<!--        <uc:Spinner Width="{Binding MainWindowWidth}" Height="{Binding MainWindowHeight}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/> -->
+
+</Window>

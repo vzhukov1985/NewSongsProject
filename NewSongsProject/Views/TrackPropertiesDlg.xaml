@@ -1,0 +1,163 @@
+﻿<Window x:Class="NewSongsProject.Views.TrackPropertiesDlg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NewSongsProject.Views"
+        xmlns:vm="clr-namespace:NewSongsProject.ViewModels"
+        mc:Ignorable="d"
+        Title="Свойства трека" Height="430" Width="390" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Window.DataContext>
+        <vm:TrackPropertiesDlgVM/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <Style x:Key="OptionName" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="0,5,5,0"/>
+        </Style>
+        <Style x:Key="OptionValue" TargetType="FrameworkElement">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="5,5,0,0"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Style="{StaticResource DialogHeader}"
+                   Text="Свойства трека"/>
+
+        <TextBlock Grid.Row="1"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Имя проекта:"/>
+        <TextBox Grid.Row="1"
+                 Grid.Column="1"
+                 Style="{StaticResource OptionValue}"
+                 Text="{Binding Caption}"/>
+
+        <TextBlock Grid.Row="2"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Полное название песни:"/>
+        <TextBox Grid.Row="2"
+                 Grid.Column="1"
+                 Style="{StaticResource OptionValue}"
+                 Text="{Binding FullName}"/>
+
+        <TextBlock Grid.Row="3"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Категория:"/>
+        <ComboBox Grid.Row="3"
+                  Grid.Column="1"
+                  Style="{StaticResource OptionValue}"
+                  SelectedIndex="{Binding Category}"
+                  ItemsSource="{Binding CategoriesList}"
+                  DisplayMemberPath="Name"/>
+
+        <TextBlock Grid.Row="4"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Вокал:"/>
+
+        <StackPanel Grid.Row="4"
+                    Grid.Column="1"
+                    Style="{StaticResource OptionValue}">
+            <RadioButton GroupName="Vocals"
+                         Margin="0,0,0,3"
+                         Content="Мужской"
+                         IsChecked="{Binding IsMaleVocalSelected}"/>
+            <RadioButton GroupName="Vocals"
+                         Margin="0,0,0,3"
+                         Content="Женский"
+                         IsChecked="{Binding IsFemaleVocalSelected}"/>
+            <RadioButton GroupName="Vocals"
+                         Content="Дуэт"
+                         IsChecked="{Binding IsDuetVocalSelected}"/>
+
+        </StackPanel>
+
+        <TextBlock Grid.Row="5"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Лаундж версия:"/>
+
+        <CheckBox Grid.Row="5"
+                  Grid.Column="1"
+                  Style="{StaticResource OptionValue}"
+                  IsChecked="{Binding IsLounge}"/>
+
+        <TextBlock Grid.Row="6"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   VerticalAlignment="Top"
+                   Text="Тэги для поиска:"/>
+        <TextBox Grid.Row="6"
+                 Grid.Column="1"
+                 TextWrapping="Wrap"
+                 VerticalAlignment="Top"
+                 Height="100"
+                 Style="{StaticResource OptionValue}"
+                 Text="{Binding Tags}"/>
+
+        <TextBlock Grid.Row="7"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   Text="Проиграно раз:"/>
+
+        <TextBlock Grid.Row="7"
+                   Grid.Column="1"
+                   VerticalAlignment="Top" 
+                   Style="{StaticResource OptionValue}"
+                   Text="{Binding TimesOpened}"/>
+
+        <Button Grid.Row="7"
+                Grid.Column="1"
+                VerticalAlignment="Top" 
+                Style="{StaticResource OptionValue}"
+                HorizontalAlignment="Right"
+                Margin="0,5,10,0"
+                Width="90" 
+                Content="Сбросить"
+                Command="{Binding ResetTimesOpenedCmd}"/>
+
+
+
+        <StackPanel Grid.Row="8"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,10,5"
+                    Orientation="Horizontal">
+
+            <Button Width="90"
+                    Margin="0,0,15,0"
+                    IsDefault="True"
+                    Click="Button_Click"
+                    Content="Сохранить"/>
+            <Button Width="80"
+                    IsCancel="True"
+                    Content="Отмена" />
+        </StackPanel>
+    </Grid>
+</Window>
