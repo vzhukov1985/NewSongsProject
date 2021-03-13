@@ -95,6 +95,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\ColorToBrushConverter.cs" />
+    <Compile Include="Converters\IsPlayingToColorConverter.cs" />
     <Compile Include="Models\TrackCategory.cs" />
     <Compile Include="Models\TrackFilter.cs" />
     <Compile Include="Services\Wrapper.cs" />

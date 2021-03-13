@@ -27,6 +27,7 @@
     <Window.Resources>
         <conv:ItemTypeToFontConverter x:Key="ItemTypeToFontConverter"/>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:IsPlayingToColorConverter x:Key="IsPlayingToColorConverter"/>
     </Window.Resources>
 
     <Window.InputBindings>
@@ -114,6 +115,11 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
@@ -125,21 +131,25 @@
 
                 <TextBlock Width="150"
                            HorizontalAlignment="Left"
+                           Margin="3,0,0,0"
                            FontWeight="Bold"
                            Text="{Binding SearchText, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
 
-            <TextBlock Grid.Row="1"
-                       HorizontalAlignment="Center"
-                       Text="Открытый трек:"/>
+            <Separator Grid.Row="1" />
 
             <TextBlock Grid.Row="2"
                        HorizontalAlignment="Center"
-                       Text="{Binding OpenedTrack}"/>
+                       Margin="0,5,0,0"
+                       Text="Открытый трек:"/>
 
             <TextBlock Grid.Row="3"
                        HorizontalAlignment="Center"
-                       Text="{Binding IsPlaying}"/>
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Margin="0,3,0,3"
+                       Foreground="{Binding IsPlaying, Mode=OneWay, Converter={StaticResource IsPlayingToColorConverter}}"
+                       Text="{Binding OpenedTrack}"/>
 
             <TextBlock Grid.Row="4"
                        HorizontalAlignment="Center"
@@ -147,21 +157,38 @@
 
             <TextBlock Grid.Row="5"
                        HorizontalAlignment="Center"
+                       FontSize="14"
+                       FontWeight="Bold"
+                       Margin="0,3,0,8"
+                       Foreground="Chocolate"
                        Text="{Binding SelectedTrackListItem.Caption}"/>
 
-            <CheckBox Grid.Row="6"
-                      Margin="7,5,0,5"
+            <Separator Grid.Row="6"/>
+            
+            <CheckBox Grid.Row="7"
+                      Margin="0,10,0,5"
+                      HorizontalAlignment="Center"
+                      Foreground="#AA0000"
+                      FontSize="13"
+                      FontWeight="DemiBold"
                       Content="Режим выступления"
-                      Foreground="Red"
-                      IsChecked="{Binding PerformanceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                      HorizontalAlignment="Left"/>
+                      IsChecked="{Binding PerformanceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Button Grid.Row="7"
-                    Margin=" 7,5,7,5"
+
+            <Button Grid.Row="8"
+                    Margin=" 7,10,7,10"
                     Content="Настройки"
                     Command="{Binding ShowAppSettingsCmd}"/>
 
-            <Grid Grid.Row="8">
+            <Separator Grid.Row="9" />
+
+            <TextBlock Grid.Row="10"
+                       Margin="0,5,0,5"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Text="Фильтры:"/>
+
+            <Grid Grid.Row="11">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -237,7 +264,7 @@
                 </CheckBox>
             </Grid>
 
-            <Grid Grid.Row="9"
+            <Grid Grid.Row="12"
                   Margin="0,10,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -265,14 +292,21 @@
                 </CheckBox>
             </Grid>
 
-            <CheckBox Grid.Row="10"
-                      Margin="0,10,0,0"
+            <CheckBox Grid.Row="13"
+                      Margin="0,10,0,10"
                           IsChecked="{Binding LoungeFilter}">
                 <CheckBox.Content>
-                    <TextBlock Text="Только лаундж"/>
+                    <TextBlock Text="\ - Только лаундж"/>
                 </CheckBox.Content>
             </CheckBox>
 
+            <Separator Grid.Row="14"/>
+
+            <TextBlock Grid.Row="15"
+                       Margin="0,5,0,0"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Text="Плейлист:"/>
 
 
 
