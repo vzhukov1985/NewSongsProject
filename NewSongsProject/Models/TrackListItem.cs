@@ -16,5 +16,22 @@ namespace NewSongsProject.Models
         public bool IsLounge { get; set; }
         public List<string> Tags { get; set; }
         public int TimesOpened { get; set; }
+
+        public TrackListItem()
+        {
+            Tags = new List<string>();
+        }
+
+        public TrackListItem(TrackListItem source)
+        {
+            Caption = source.Caption;
+            IsDirectory = source.IsDirectory;
+            FullPath = source.FullPath;
+            Category = source.Category;
+            VocalType = source.VocalType;
+            IsLounge = source.IsLounge;
+            Tags = source.Tags;
+            TimesOpened = source.TimesOpened;
+        }
     }
 }

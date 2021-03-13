@@ -166,16 +166,16 @@ namespace NewSongsProject.ViewModels
             }
         }
 
-            private TrackFilter _VocalsFilter;
-            public TrackFilter VocalsFilter
+        private TrackFilter _VocalsFilter;
+        public TrackFilter VocalsFilter
+        {
+            get { return _VocalsFilter; }
+            set
             {
-                get { return _VocalsFilter; }
-                set
-                {
-                    _VocalsFilter = value;
-                    OnPropertyChanged("VocalsFilter");
-                }
+                _VocalsFilter = value;
+                OnPropertyChanged("VocalsFilter");
             }
+        }
 
         private bool _loungeFilter;
         public bool LoungeFilter
@@ -188,6 +188,29 @@ namespace NewSongsProject.ViewModels
                 OnPropertyChanged("LoungeFilter");
             }
         }
+
+        private List<TrackListItem> _playlist;
+        public List<TrackListItem> Playlist
+        {
+            get { return _playlist; }
+            set
+            {
+                _playlist = value;
+                OnPropertyChanged("Playlist");
+            }
+        }
+
+        private TrackListItem _selectedPlaylistItem;
+        public TrackListItem SelectedPlaylistItem
+        {
+            get { return _selectedPlaylistItem; }
+            set
+            {
+                _selectedPlaylistItem = value;
+                OnPropertyChanged("SelectedPlaylistItem");
+            }
+        }
+
 
 
 
@@ -278,10 +301,20 @@ namespace NewSongsProject.ViewModels
         public RelayCommand ShowAppSettingsCmd { get; set; }
         public RelayCommand AlterCategoryFilterCmd { get; set; }
         public RelayCommand AlterVocalsFilterCmd { get; set; }
+        public RelayCommand AddTrackToPlaylistCmd { get; set; }
+
+        public RelayCommand MovePlaylistItemUpCmd { get; set; }
+        public RelayCommand MovePlaylistItemDownCmd { get; set; }
+        public RelayCommand RemovePlaylistItemCmd { get; set; }
+        public RelayCommand ClearPlaylistCmd { get; set; }
+        public RelayCommand LoadPlaylistCmd { get; set; }
+        public RelayCommand SavePlaylistCmd { get; set; }
+
 
         public MainWindowVM()
         {
             searchSmph = new SemaphoreSlim(1);
+            Playlist = new List<TrackListItem>();
             additionalTrackInfos = new List<AdditionalTrackInfo>();
             LoadAppSettings();
 
@@ -298,9 +331,9 @@ namespace NewSongsProject.ViewModels
                 true,
                 true,
             };
-            foreach(var i in CategoriesFilter)
+            foreach (var i in CategoriesFilter)
             {
-                i.PropertyChanged += (s,e) => ProcessSearchAsync();
+                i.PropertyChanged += (s, e) => ProcessSearchAsync();
             }
 
             VocalsFilter = new TrackFilter() { true, true, true };
@@ -324,6 +357,14 @@ namespace NewSongsProject.ViewModels
             AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
 
+            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
+            MovePlaylistItemUpCmd = new RelayCommand(_ => MovePlaylistItemUp(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
+            MovePlaylistItemDownCmd = new RelayCommand(_ => MovePlaylistItemDown(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
+            RemovePlaylistItemCmd = new RelayCommand(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); }, _ => SelectedPlaylistItem != null);
+            ClearPlaylistCmd = new RelayCommand(_ => Playlist = new List<TrackListItem>(), _ => Playlist.Count > 0);
+            LoadPlaylistCmd = new RelayCommand(_ => LoadPlaylist());
+            SavePlaylistCmd = new RelayCommand(_ => SavePlaylist(), _ => Playlist.Count > 0);
+
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
             tmrPlayStatusChecker = new Timer(_ => PlayStatusCheck(), null, 0, 200);
             tmrAlwaysSelectionChecker = new Timer(_ => { if (TrackList != null && TrackList.Count > 0 && SelectedTrackListItem == null) SelectedTrackListItem = TrackList[0]; }, null, 0, 100);
@@ -336,6 +377,62 @@ namespace NewSongsProject.ViewModels
 
             ChangeDirectoryAsync(currentPath);
         }
+
+        private void LoadPlaylist()
+        {
+            if (DialogService.ShowOpenFileDialog())
+            {
+                string data = File.ReadAllText(DialogService.FilePath);
+                var plCheck = JsonConvert.DeserializeObject<List<TrackListItem>>(data);
+                List<TrackListItem> itemsToRemove = new List<TrackListItem>();
+                foreach (var i in plCheck)
+                {
+                    if (!File.Exists(i.FullPath))
+                        itemsToRemove.Add(i);
+                }
+
+                if (itemsToRemove.Count > 0)
+                {
+                    string msg = "ВНИМАНИЕ! Плейлист содержит ссылки на проекты, которые уже не существуют:\r\n\r\n";
+                    foreach (var j in itemsToRemove)
+                    {
+                        msg += $"{j.Caption} - {j.FullPath}\r\n\r\n";
+                        plCheck.Remove(j);
+                    }
+                    msg += "\r\nДанные треки будут удалены из плейлиста";
+                    DialogService.ShowMessage(msg, "ВНИМАНИЕ!!!");
+                }
+                Playlist = plCheck;
+            }
+        }
+
+        private void SavePlaylist()
+        {
+            if (DialogService.ShowSaveFileDialog())
+            {
+                string data = JsonConvert.SerializeObject(Playlist);
+                File.WriteAllText(DialogService.FilePath, data);
+            }
+        }
+
+        private void MovePlaylistItemUp()
+        {
+            var item = SelectedPlaylistItem;
+            var id = Playlist.IndexOf(SelectedPlaylistItem);
+            Playlist.Remove(item);
+            Playlist.Insert(id - 1, item);
+            Playlist = Playlist.ToList();
+        }
+
+        private void MovePlaylistItemDown()
+        {
+            var item = SelectedPlaylistItem;
+            var id = Playlist.IndexOf(SelectedPlaylistItem);
+            Playlist.Remove(item);
+            Playlist.Insert(id + 1, item);
+            Playlist = Playlist.ToList();
+        }
+
 
         private void AlterCategoryFilter(int category)
         {
@@ -369,7 +466,7 @@ namespace NewSongsProject.ViewModels
 
             if (string.IsNullOrEmpty(SearchText)) ProcessSearchAsync();
         }
-       
+
         private void AlterVocalsFilter(int vocalsType)
         {
             if (vocalsType > -1)
@@ -562,7 +659,7 @@ namespace NewSongsProject.ViewModels
                     }
                 }
 
-                allTracksList = items.OrderByDescending(t => t.IsDirectory).ThenByDescending(t => t.TimesOpened).ThenBy(t =>t.Caption).ToList();
+                allTracksList = items.OrderByDescending(t => t.IsDirectory).ThenByDescending(t => t.TimesOpened).ThenBy(t => t.Caption).ToList();
             }
             catch
             {

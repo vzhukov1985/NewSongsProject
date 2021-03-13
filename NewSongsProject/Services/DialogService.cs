@@ -7,11 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace NewSongsProject.Services
 {
     public static class DialogService
     {
+        public static string FilePath { get; set; }
+
         public static AdditionalTrackInfo ShowTrackPropertiesDlg(AdditionalTrackInfo trackInfo, List<TrackCategory> trackCategories, List<TrackListItem> allTracks)
         {
             var dlgVM = new TrackPropertiesDlgVM(trackInfo, trackCategories, allTracks);
@@ -45,6 +48,35 @@ namespace NewSongsProject.Services
             {
                // a
             }
+        }
+
+        public static bool ShowOpenFileDialog()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Hollywood Playlist| *.hpl";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                FilePath = openFileDialog.FileName;
+                return true;
+            }
+            return false;
+        }
+
+        public static bool ShowSaveFileDialog()
+        {
+            SaveFileDialog openFileDialog = new SaveFileDialog();
+            openFileDialog.Filter = "Hollywood Playlist| *.hpl";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                FilePath = openFileDialog.FileName;
+                return true;
+            }
+            return false;
+        }
+
+        public static void ShowMessage(string message, string caption)
+        {
+            MessageBox.Show(message, caption);
         }
     }
 }
