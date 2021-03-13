@@ -37,17 +37,39 @@ namespace NewSongsProject.Views
             {
 
                 case Key.Down:
-                    if (!list.Items.MoveCurrentToNext())
+                    if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
                     {
-                        list.Items.MoveCurrentToLast();
+                        var dc = ((MainWindowVM)DataContext);
+                        if (dc.SelectNextPlaylistItemCmd.CanExecute(null))
+                        {
+                            dc.SelectNextPlaylistItemCmd.Execute(null);
+                        }
+                    }
+                    else
+                    {
+                        if (!list.Items.MoveCurrentToNext())
+                        {
+                            list.Items.MoveCurrentToLast();
+                        }
                     }
                     e.Handled = true;
                     break;
 
                 case Key.Up:
-                    if (!list.Items.MoveCurrentToPrevious())
+                    if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
                     {
-                        list.Items.MoveCurrentToFirst();
+                        var dc = ((MainWindowVM)DataContext);
+                        if (dc.SelectPrevPlaylistItemCmd.CanExecute(null))
+                        {
+                            dc.SelectPrevPlaylistItemCmd.Execute(null);
+                        }
+                    }
+                    else
+                    {
+                        if (!list.Items.MoveCurrentToPrevious())
+                        {
+                            list.Items.MoveCurrentToFirst();
+                        }
                     }
                     e.Handled = true;
                     break;

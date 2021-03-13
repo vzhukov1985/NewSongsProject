@@ -184,7 +184,7 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _loungeFilter = value;
-                if (string.IsNullOrEmpty(SearchText)) ProcessSearchAsync();
+                if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
                 OnPropertyChanged("LoungeFilter");
             }
         }
@@ -310,6 +310,11 @@ namespace NewSongsProject.ViewModels
         public RelayCommand LoadPlaylistCmd { get; set; }
         public RelayCommand SavePlaylistCmd { get; set; }
 
+        public RelayCommand SelectPlayListItemByPathCmd { get; set; }
+        public RelayCommand SelectPrevPlaylistItemCmd { get; set; }
+        public RelayCommand SelectNextPlaylistItemCmd { get; set; }
+        public RelayCommand ProcessPlaylistItemCmd { get; set; }
+
 
         public MainWindowVM()
         {
@@ -333,31 +338,31 @@ namespace NewSongsProject.ViewModels
             };
             foreach (var i in CategoriesFilter)
             {
-                i.PropertyChanged += (s, e) => ProcessSearchAsync();
+                i.PropertyChanged += (s, e) => ProcessSearch();
             }
 
             VocalsFilter = new TrackFilter() { true, true, true };
             foreach (var i in VocalsFilter)
             {
-                i.PropertyChanged += (s, e) => ProcessSearchAsync();
+                i.PropertyChanged += (s, e) => ProcessSearch();
             }
 
 
             SelectFirstTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.FirstOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) > 0);
             SelectLastTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.LastOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) < TrackList.Count - 1);
             ProcessTrackListItemCmd = new RelayCommand(_ => ProcessTrackListItem(), _ => SelectedTrackListItem != null);
-            UpFolderCmd = new RelayCommand(_ => ChangeDirectoryAsync(Directory.GetParent(currentPath).FullName), _ => Directory.GetParent(currentPath) != null);
+            UpFolderCmd = new RelayCommand(_ => ChangeDirectory(Directory.GetParent(currentPath).FullName), _ => Directory.GetParent(currentPath) != null);
             SaveSettingsCmd = new RelayCommand(_ => SaveAppSettings());
-            AddSymbolSearchCmd = new RelayCommand((symbol) => { SearchText += (string)symbol; ProcessSearchAsync(); });
-            RemoveSymbolSearchCmd = new RelayCommand(_ => { SearchText = SearchText.Substring(0, SearchText.Length - 1); ProcessSearchAsync(); }, _ => SearchText.Length > 0);
-            ClearSearchCmd = new RelayCommand(_ => { SearchText = ""; ProcessSearchAsync(); });
+            AddSymbolSearchCmd = new RelayCommand((symbol) => { SearchText += (string)symbol; ProcessSearch(); });
+            RemoveSymbolSearchCmd = new RelayCommand(_ => { SearchText = SearchText.Substring(0, SearchText.Length - 1); ProcessSearch(); }, _ => SearchText.Length > 0);
+            ClearSearchCmd = new RelayCommand(_ => ClearSearch());
             PlayStopCmd = new RelayCommand(_ => PlayStop());
             ShowTrackPropertiesCmd = new RelayCommand(_ => EditTrackProperties(), _ => SelectedTrackListItem != null && SelectedTrackListItem.IsDirectory == false);
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
             AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
 
-            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
+            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); if (Playlist.Count == 1) SelectedPlaylistItem = Playlist[0]; }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
             MovePlaylistItemUpCmd = new RelayCommand(_ => MovePlaylistItemUp(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
             MovePlaylistItemDownCmd = new RelayCommand(_ => MovePlaylistItemDown(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
             RemovePlaylistItemCmd = new RelayCommand(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); }, _ => SelectedPlaylistItem != null);
@@ -365,17 +370,82 @@ namespace NewSongsProject.ViewModels
             LoadPlaylistCmd = new RelayCommand(_ => LoadPlaylist());
             SavePlaylistCmd = new RelayCommand(_ => SavePlaylist(), _ => Playlist.Count > 0);
 
+            SelectPlayListItemByPathCmd = new RelayCommand((path) => SelectPlaylistItem((string)path));
+            SelectNextPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) + 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != Playlist.Count-1);
+            SelectPrevPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) - 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != 0);
+            ProcessPlaylistItemCmd = new RelayCommand(_ => { SelectPlaylistItem(SelectedPlaylistItem.FullPath); ProcessTrackListItem(); }, _ => SelectedPlaylistItem != null);
+
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
             tmrPlayStatusChecker = new Timer(_ => PlayStatusCheck(), null, 0, 200);
             tmrAlwaysSelectionChecker = new Timer(_ => { if (TrackList != null && TrackList.Count > 0 && SelectedTrackListItem == null) SelectedTrackListItem = TrackList[0]; }, null, 0, 100);
 
             dirWatcher = new FileSystemWatcher(currentPath) { NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName, IncludeSubdirectories = false };
-            dirWatcher.Created += (s, e) => DirContentsChangedAsync(e.FullPath);
-            dirWatcher.Deleted += (s, e) => DirContentsChangedAsync(e.FullPath);
-            dirWatcher.Renamed += (s, e) => DirContentsChangedAsync(e.FullPath);
+            dirWatcher.Created += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
+            dirWatcher.Deleted += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
+            dirWatcher.Renamed += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
             dirWatcher.EnableRaisingEvents = true;
 
-            ChangeDirectoryAsync(currentPath);
+            ChangeDirectory(currentPath);
+        }
+
+        private void ClearSearch()
+        {
+            if (string.IsNullOrEmpty(SearchText))
+            {
+                AlterCategoryFilter(-1);
+                AlterVocalsFilter(-1);
+                LoungeFilter = false;
+            }
+            else
+            {
+                SearchText = "";
+            }
+            ProcessSearch();
+        }
+
+        private void SelectPlaylistItem(string path)
+        {
+            var itemDir = Path.GetDirectoryName(path);
+            if (itemDir != currentPath)
+                ChangeDirectory(itemDir);
+            
+            SelectedPlaylistItem = Playlist.FirstOrDefault(t => t.FullPath == path);
+            
+            if (string.IsNullOrEmpty(SearchText))
+            {
+                SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == path);
+            }
+            else
+            {
+                SearchText = "";
+                ProcessSearch(path);
+            }
+            if (SelectedTrackListItem == null)
+            {
+                AlterCategoryFilter(-1);
+                AlterVocalsFilter(-1);
+                LoungeFilter = false;
+                SelectPlaylistItem(path);
+            }
+        }
+
+        private void SelectPlaylistItem(int index)
+        {
+            var itemDir = Path.GetDirectoryName(Playlist[index].FullPath);
+            if (itemDir != currentPath)
+                ChangeDirectory(itemDir);
+            
+            SelectedPlaylistItem = Playlist[index];
+
+            if (string.IsNullOrEmpty(SearchText))
+            {
+                SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == Playlist[index].FullPath);
+            }
+            else
+            {
+                SearchText = "";
+                ProcessSearch(Playlist[index].FullPath);
+            }
         }
 
         private void LoadPlaylist()
@@ -464,7 +534,7 @@ namespace NewSongsProject.ViewModels
                 return;
             }
 
-            if (string.IsNullOrEmpty(SearchText)) ProcessSearchAsync();
+            if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
         }
 
         private void AlterVocalsFilter(int vocalsType)
@@ -497,7 +567,7 @@ namespace NewSongsProject.ViewModels
                 return;
             }
 
-            if (string.IsNullOrEmpty(SearchText)) ProcessSearchAsync();
+            if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
         }
 
 
@@ -506,16 +576,15 @@ namespace NewSongsProject.ViewModels
             DialogService.ShowAppSettingsDlg(appSettings, CategoriesList);
         }
 
-        private async void DirContentsChangedAsync(string path)
+        private void DirContentsChanged(string path)
         {
-            await Task.Run(() =>
-            {
-                if (Path.GetFileName(path).Equals("MixScenes") || (!File.GetAttributes(path).HasFlag(FileAttributes.Directory) && !Path.GetExtension(path).Equals(".cwp"))) return;
+            //TODO: Selected Item resets when dir contents change - multiple events firing
+            if (Path.GetFileName(path).Equals("MixScenes") || (!File.GetAttributes(path).HasFlag(FileAttributes.Directory) && !Path.GetExtension(path).Equals(".cwp"))) return;
 
-                var selFilePath = SelectedTrackListItem.FullPath;
-                RefreshTrackList();
-                SelectedTrackListItem = allTracksList.FirstOrDefault(t => t.FullPath == selFilePath);
-            });
+            var selFilePath = SelectedTrackListItem.FullPath;
+            RefreshTrackList();
+            ProcessSearch(selFilePath);
+            dirWatcher.EnableRaisingEvents = true;
         }
 
         private void EditTrackProperties()
@@ -558,7 +627,7 @@ namespace NewSongsProject.ViewModels
             }
 
             RefreshTrackList();
-            ProcessSearchAsync(updatedInfo.TrackPath);
+            ProcessSearch(updatedInfo.TrackPath);
             SaveAppSettings();
         }
 
@@ -617,13 +686,13 @@ namespace NewSongsProject.ViewModels
             }
         }
 
-        private async void ChangeDirectoryAsync(string path)
+        private void ChangeDirectory(string path)
         {
             dirWatcher.Path = path;
             currentPath = path;
-            await Task.Run(() => RefreshTrackList());
+            RefreshTrackList();
             SearchText = "";
-            ProcessSearchAsync();
+            ProcessSearch();
         }
 
         private void RefreshTrackList()
@@ -674,7 +743,7 @@ namespace NewSongsProject.ViewModels
 
             if (SelectedTrackListItem.IsDirectory)
             {
-                ChangeDirectoryAsync(SelectedTrackListItem.FullPath);
+                ChangeDirectory(SelectedTrackListItem.FullPath);
             }
             else
             {
@@ -686,7 +755,16 @@ namespace NewSongsProject.ViewModels
 
             var SelectedItemFullPath = SelectedTrackListItem.FullPath;
             SearchText = "";
-            SelectedTrackListItem = allTracksList.Where(t => t.FullPath == SelectedItemFullPath).FirstOrDefault();
+            ProcessSearch();
+            var plIdx = Playlist.FindIndex(t => t.FullPath == SelectedItemFullPath);
+            if (plIdx == -1 || plIdx == Playlist.Count-1)
+            {
+                SelectedTrackListItem = allTracksList.Where(t => t.FullPath == SelectedItemFullPath).FirstOrDefault();
+            }
+            else
+            {
+                SelectPlaylistItem(plIdx + 1);
+            }
         }
 
         private void OpenCwpProject(string path)
@@ -751,29 +829,23 @@ namespace NewSongsProject.ViewModels
             tmrFocus = new Timer((tmr) => { SetForegroundWindow(mainWndHandle); if (tmrFocusCounter > 10) tmrFocus.Change(Timeout.Infinite, Timeout.Infinite); tmrFocusCounter++; }, 0, 0, 100);
         }
 
-        private async void ProcessSearchAsync(string pathItemToSelect = null)
+        private void ProcessSearch(string pathItemToSelect = null)
         {
-            await searchSmph.WaitAsync();
-            await Task.Run(() =>
+            try
             {
-                try
+                if (allTracksList != null)
                 {
-                    if (allTracksList != null)
-                    {
-                        TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (CategoriesFilter.FilteredList.Contains(t.Category) &&
-                                                                                                VocalsFilter.FilteredList.Contains((int)t.VocalType) &&
-                                                                                                (LoungeFilter == true ? t.IsLounge == true : true)) || t.IsDirectory == true).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
-                        if (!string.IsNullOrEmpty(pathItemToSelect))
-                            Application.Current.Dispatcher.Invoke(new Action(() => SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == pathItemToSelect)));
-                    }
+                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (CategoriesFilter.FilteredList.Contains(t.Category) &&
+                                                                                            VocalsFilter.FilteredList.Contains((int)t.VocalType) &&
+                                                                                            (LoungeFilter == true ? t.IsLounge == true : true)) || t.IsDirectory == true).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (!string.IsNullOrEmpty(pathItemToSelect))
+                        SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == pathItemToSelect);
                 }
-                catch
-                {
-                    return;
-                }
-            });
-            searchSmph.Release();
-            searchSmph = new SemaphoreSlim(1);
+            }
+            catch
+            {
+                return;
+            }
         }
 
         private void LoadAppSettings()

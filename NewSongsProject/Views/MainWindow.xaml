@@ -35,13 +35,14 @@
         <KeyBinding Key="Home" Command="{Binding SelectFirstTrackCmd}"/>
 
         <KeyBinding Key="Return" Command="{Binding ProcessTrackListItemCmd}"/>
+        <KeyBinding Key="Return" Modifiers="Ctrl" Command="{Binding ProcessPlaylistItemCmd}"/>
 
         <KeyBinding Key="Backspace" Command="{Binding RemoveSymbolSearchCmd}"/>
         <KeyBinding Key="Backspace" Modifiers="Ctrl" Command="{Binding UpFolderCmd}"/>
 
         <KeyBinding Key="Esc" Command="{Binding ClearSearchCmd}"/>
 
-        <KeyBinding Key="OemBackslash" Modifiers="Ctrl" Command="{Binding ShowTrackPropertiesCmd}"/>
+        <KeyBinding Key="Tab" Command="{Binding ShowTrackPropertiesCmd}"/>
 
         <KeyBinding Key="NumPad0" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="0"/>
         <KeyBinding Key="NumPad1" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="1"/>
@@ -339,6 +340,11 @@
                                         <Binding Path="Caption"/>
                                     </MultiBinding>
                                 </TextBlock.Text>
+
+                                <TextBlock.InputBindings>
+                                    <MouseBinding Gesture="LeftClick" Command="{Binding ElementName=MainWnd, Path=DataContext.SelectPlayListItemByPathCmd}" CommandParameter="{Binding FullPath}"/>
+                                    <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ElementName=MainWnd, Path=DataContext.ProcessTrackListItemCmd  }"/>
+                                </TextBlock.InputBindings>
                             </TextBlock>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -376,12 +382,7 @@
                         Content="Сохр"
                         Command="{Binding SavePlaylistCmd}"/>
             </Grid>
-
-
-
-
         </Grid>
     </Grid>
-    <!--        <uc:Spinner Width="{Binding MainWindowWidth}" Height="{Binding MainWindowHeight}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/> -->
 
 </Window>
