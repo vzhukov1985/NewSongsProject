@@ -156,6 +156,18 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private TrackFilter _categoriesFilter;
+        public TrackFilter CategoriesFilter
+        {
+            get { return _categoriesFilter; }
+            set
+            {
+                _categoriesFilter = value;
+                OnPropertyChanged("CategoriesFilter");
+            }
+        }
+
+
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -212,7 +224,7 @@ namespace NewSongsProject.ViewModels
         private string currentPath;
         private List<TrackListItem> allTracksList;
         private List<AdditionalTrackInfo> additionalTrackInfos;
-        private List<TrackCategory> trackCategories;
+        public List<TrackCategory> CategoriesList;
 
         private IntPtr mainWndHandle;
 
@@ -239,11 +251,31 @@ namespace NewSongsProject.ViewModels
         public RelayCommand PlayStopCmd { get; set; }
         public RelayCommand ShowTrackPropertiesCmd { get; set; }
         public RelayCommand ShowAppSettingsCmd { get; set; }
+        public RelayCommand AlterCategoryFilterCmd { get; set; }
 
         public MainWindowVM()
         {
             additionalTrackInfos = new List<AdditionalTrackInfo>();
             LoadAppSettings();
+
+            CategoriesFilter = new TrackFilter()
+            {
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+            };
+            foreach(var i in CategoriesFilter)
+            {
+                i.PropertyChanged += (s,e) => ProcessSearch();
+            }
+            
 
             SelectFirstTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.FirstOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) > 0);
             SelectLastTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.LastOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) < TrackList.Count - 1);
@@ -256,6 +288,7 @@ namespace NewSongsProject.ViewModels
             PlayStopCmd = new RelayCommand(_ => PlayStop());
             ShowTrackPropertiesCmd = new RelayCommand(_ => EditTrackProperties(), _ => SelectedTrackListItem != null && SelectedTrackListItem.IsDirectory == false);
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
+            AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
 
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
             tmrPlayStatusChecker = new Timer(_ => PlayStatusCheck(), null, 0, 200);
@@ -270,9 +303,42 @@ namespace NewSongsProject.ViewModels
             ChangeDirectoryAsync(currentPath);
         }
 
+        private void AlterCategoryFilter(int category)
+        {
+            if (category > -1)
+            {
+                if (CategoriesFilter.FilteredList.Count == 10)
+                {
+                    for (int i = 0; i < CategoriesFilter.Count; i++)
+                    {
+                        CategoriesFilter[i] = i == category ? true : false;
+                    }
+                }
+                else
+                {
+                    CategoriesFilter[category] = !CategoriesFilter[category];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < CategoriesFilter.Count; i++)
+                {
+                    CategoriesFilter[i] = true;
+                }
+            }
+
+            if (CategoriesFilter.FilteredList.Count == 0)
+            {
+                AlterCategoryFilter(-1);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
+        }
+
         private void ShowAppSettings()
         {
-            DialogService.ShowAppSettingsDlg(appSettings, trackCategories);
+            DialogService.ShowAppSettingsDlg(appSettings, CategoriesList);
         }
 
         private async void DirContentsChangedAsync(string path)
@@ -300,7 +366,7 @@ namespace NewSongsProject.ViewModels
                 };
             }
 
-            var updatedInfo = DialogService.ShowTrackPropertiesDlg(trackInfo, trackCategories);
+            var updatedInfo = DialogService.ShowTrackPropertiesDlg(trackInfo, CategoriesList);
 
             if (updatedInfo == null)
                 return;
@@ -526,7 +592,7 @@ namespace NewSongsProject.ViewModels
             {
                 if (allTracksList != null)
                 {
-                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => CategoriesFilter.FilteredList.Contains(t.Category)).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
                 }
             });
         }
@@ -557,11 +623,11 @@ namespace NewSongsProject.ViewModels
             string trackCategoriesPath = AppDomain.CurrentDomain.BaseDirectory + "\\Categories.json";
             if (File.Exists(trackCategoriesPath))
             {
-                trackCategories = JsonConvert.DeserializeObject<List<TrackCategory>>(File.ReadAllText(trackCategoriesPath));
+                CategoriesList = JsonConvert.DeserializeObject<List<TrackCategory>>(File.ReadAllText(trackCategoriesPath));
             }
             else
             {
-                trackCategories = new List<TrackCategory>()
+                CategoriesList = new List<TrackCategory>()
                 {
                     new TrackCategory() {Name = "Без категории", IsChangeable = false},
                     new TrackCategory() {Name = "Нет"},
@@ -593,7 +659,7 @@ namespace NewSongsProject.ViewModels
             appSettings.TrackListFontSize = TrackListFontSize;
             var fileData = JsonConvert.SerializeObject(appSettings);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\Settings.json", fileData);
-            fileData = JsonConvert.SerializeObject(trackCategories);
+            fileData = JsonConvert.SerializeObject(CategoriesList);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\Categories.json", fileData);
             fileData = JsonConvert.SerializeObject(additionalTrackInfos);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\TracksInfo.json", fileData);

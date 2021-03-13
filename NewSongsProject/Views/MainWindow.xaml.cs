@@ -90,10 +90,19 @@ namespace NewSongsProject.Views
 
         private void MainWnd_TextInput(object sender, TextCompositionEventArgs e)
         {
-            char[] acceptedKeys = { 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm',
+            char[] searchKeys = { 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm',
                                     'й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ', 'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'};
 
-            if (!string.IsNullOrEmpty(e.Text) && acceptedKeys.Contains(e.Text[0]))
+
+            var dc = (MainWindowVM)DataContext;
+
+            if (e.Text == ".")
+            {
+                dc.AlterCategoryFilterCmd.Execute("-1");
+                e.Handled = true;
+            }
+
+            if (!string.IsNullOrEmpty(e.Text) && searchKeys.Contains(e.Text[0]))
             {
                 ((MainWindowVM)DataContext).AddSymbolSearchCmd.Execute(e.Text);
                 e.Handled = true;

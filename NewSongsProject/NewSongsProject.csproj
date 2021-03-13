@@ -96,6 +96,8 @@
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Converters\ColorToBrushConverter.cs" />
     <Compile Include="Models\TrackCategory.cs" />
+    <Compile Include="Models\TrackFilter.cs" />
+    <Compile Include="Services\Wrapper.cs" />
     <Compile Include="UserControls\Spinner.xaml.cs">
       <DependentUpon>Spinner.xaml</DependentUpon>
     </Compile>

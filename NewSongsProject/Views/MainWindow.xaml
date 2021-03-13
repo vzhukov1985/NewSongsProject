@@ -40,6 +40,17 @@
 
         <KeyBinding Key="F1" Modifiers="Ctrl" Command="{Binding ShowTrackPropertiesCmd}"/>
 
+        <KeyBinding Key="NumPad0" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="0"/>
+        <KeyBinding Key="NumPad1" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="1"/>
+        <KeyBinding Key="NumPad2" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="2"/>
+        <KeyBinding Key="NumPad3" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="3"/>
+        <KeyBinding Key="NumPad4" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="4"/>
+        <KeyBinding Key="NumPad5" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="5"/>
+        <KeyBinding Key="NumPad6" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="6"/>
+        <KeyBinding Key="NumPad7" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="7"/>
+        <KeyBinding Key="NumPad8" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="8"/>
+        <KeyBinding Key="NumPad9" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="9"/>
+
     </Window.InputBindings>
 
     <i:Interaction.Triggers>
@@ -99,7 +110,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                <RowDefinition/>
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" 
@@ -145,6 +157,53 @@
                     Margin=" 7,5,7,5"
                     Content="Настройки"
                     Command="{Binding ShowAppSettingsCmd}"/>
+
+            <Grid Grid.Row="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0"
+                          IsChecked="{Binding CategoriesFilter[1].Value}"
+                          Content="Современные танцевальные"/>
+                <CheckBox Grid.Row="1"
+                          IsChecked="{Binding CategoriesFilter[2].Value}"
+                          Content="Ретро танцевальные"/>
+                <CheckBox Grid.Row="2"
+                          IsChecked="{Binding CategoriesFilter[3].Value}"
+                          Content="Казахские/Восточные"/>
+                <CheckBox Grid.Row="3"
+                          IsChecked="{Binding CategoriesFilter[4].Value}"
+                          Content="Современные спокойные"/>
+                <CheckBox Grid.Row="4"
+                          IsChecked="{Binding CategoriesFilter[5].Value}"
+                          Content="Ретро спокойные"/>
+                <CheckBox Grid.Row="5"
+                          IsChecked="{Binding CategoriesFilter[6].Value}"
+                          Content="Рок"/>
+                <CheckBox Grid.Row="6"
+                          IsChecked="{Binding CategoriesFilter[7].Value}"
+                          Content="Новогодние"/>
+                <CheckBox Grid.Row="7"
+                          IsChecked="{Binding CategoriesFilter[8].Value}"
+                          Content="Другие языки"/>
+                <CheckBox Grid.Row="8"
+                          IsChecked="{Binding CategoriesFilter[9].Value}"
+                          Content="Нет"/>
+                <CheckBox Grid.Row="9"
+                          IsChecked="{Binding CategoriesFilter[0].Value}"
+                          Content="Без категории"/>
+            </Grid>
+                
             </Grid>
         </Grid>
 <!--        <uc:Spinner Width="{Binding MainWindowWidth}" Height="{Binding MainWindowHeight}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/> -->
