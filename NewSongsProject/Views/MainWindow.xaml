@@ -10,13 +10,14 @@
         xmlns:uc="clr-namespace:NewSongsProject.UserControls"
         mc:Ignorable="d"
         x:Name="MainWnd"
-        Title="MainWindow" 
+        Title="New SongsProject" 
         Height="{Binding MainWindowHeight, Mode=TwoWay}" 
         Width="{Binding MainWindowWidth, Mode=TwoWay}" 
         Left="{Binding MainWindowX, Mode=TwoWay}" 
         Top="{Binding MainWindowY, Mode=TwoWay}"
         PreviewKeyDown="MainWindow_PreviewKeyDown" 
         PreviewTextInput="MainWnd_TextInput"
+        PreviewMouseWheel="MainWnd_PreviewMouseWheel"
         Loaded="MainWnd_Loaded">
 
     <Window.DataContext>
@@ -38,7 +39,7 @@
 
         <KeyBinding Key="Esc" Command="{Binding ClearSearchCmd}"/>
 
-        <KeyBinding Key="F1" Modifiers="Ctrl" Command="{Binding ShowTrackPropertiesCmd}"/>
+        <KeyBinding Key="OemBackslash" Modifiers="Ctrl" Command="{Binding ShowTrackPropertiesCmd}"/>
 
         <KeyBinding Key="NumPad0" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="0"/>
         <KeyBinding Key="NumPad1" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="1"/>
@@ -59,101 +60,103 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
-            <ListView Grid.Column="0"
+        <ListView Grid.Column="0"
                   ItemsSource="{Binding TrackList}" 
                   ScrollViewer.VerticalScrollBarVisibility="Disabled"
                   SelectionChanged="TrackListView_SelectionChanged"
                   IsSynchronizedWithCurrentItem="True"
                   SelectedItem="{Binding SelectedTrackListItem}"
                   Name="TrackList">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Vertical" 
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Vertical" 
                                IsItemsHost="True" />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
 
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Caption}" 
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Caption}" 
                                FontWeight="{Binding IsDirectory, Converter={StaticResource ItemTypeToFontConverter}}"
                                FontSize="{Binding DataContext.TrackListFontSize, RelativeSource={RelativeSource AncestorType=Window, Mode=FindAncestor}}">
-                            <TextBlock.InputBindings>
-                                <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ElementName=MainWnd, Path=DataContext.ProcessTrackListItemCmd}"/>
-                            </TextBlock.InputBindings>
-                        </TextBlock>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
+                        <TextBlock.InputBindings>
+                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ElementName=MainWnd, Path=DataContext.ProcessTrackListItemCmd}"/>
+                        </TextBlock.InputBindings>
+                    </TextBlock>
+                </DataTemplate>
+            </ListView.ItemTemplate>
 
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Свойства"
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Свойства"
                               Command="{Binding ShowTrackPropertiesCmd}"/>
-                    </ContextMenu>
-                </ListView.ContextMenu>
-            </ListView>
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
 
-            <Grid Grid.Column="1"
+        <Grid Grid.Column="1"
               Background="LightGray">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
-                </Grid.RowDefinitions>
+            </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" 
+            <StackPanel Grid.Row="0" 
                         Orientation="Horizontal"
                         Margin="7,5,7,5">
 
-                    <TextBlock Text="Поиск:"/>
+                <TextBlock Text="Поиск:"/>
 
-                    <TextBlock Width="150"
+                <TextBlock Width="150"
                            HorizontalAlignment="Left"
                            FontWeight="Bold"
                            Text="{Binding SearchText, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
+            </StackPanel>
 
-                <TextBlock Grid.Row="1"
+            <TextBlock Grid.Row="1"
                        HorizontalAlignment="Center"
                        Text="Открытый трек:"/>
 
-                <TextBlock Grid.Row="2"
+            <TextBlock Grid.Row="2"
                        HorizontalAlignment="Center"
                        Text="{Binding OpenedTrack}"/>
 
-                <TextBlock Grid.Row="3"
+            <TextBlock Grid.Row="3"
                        HorizontalAlignment="Center"
                        Text="{Binding IsPlaying}"/>
 
-                <TextBlock Grid.Row="4"
+            <TextBlock Grid.Row="4"
                        HorizontalAlignment="Center"
                        Text="Следующий трек:"/>
 
-                <TextBlock Grid.Row="5"
+            <TextBlock Grid.Row="5"
                        HorizontalAlignment="Center"
                        Text="{Binding SelectedTrackListItem.Caption}"/>
 
-                <CheckBox Grid.Row="6"
+            <CheckBox Grid.Row="6"
                       Margin="7,5,0,5"
                       Content="Режим выступления"
                       Foreground="Red"
                       IsChecked="{Binding PerformanceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       HorizontalAlignment="Left"/>
 
-                <Button Grid.Row="7"
+            <Button Grid.Row="7"
                     Margin=" 7,5,7,5"
                     Content="Настройки"
                     Command="{Binding ShowAppSettingsCmd}"/>
@@ -173,39 +176,108 @@
                 </Grid.RowDefinitions>
 
                 <CheckBox Grid.Row="0"
-                          IsChecked="{Binding CategoriesFilter[1].Value}"
-                          Content="Современные танцевальные"/>
+                          IsChecked="{Binding CategoriesFilter[1].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[1].Name, StringFormat={}1. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="1"
-                          IsChecked="{Binding CategoriesFilter[2].Value}"
-                          Content="Ретро танцевальные"/>
+                          IsChecked="{Binding CategoriesFilter[2].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[2].Name, StringFormat={}2. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="2"
-                          IsChecked="{Binding CategoriesFilter[3].Value}"
-                          Content="Казахские/Восточные"/>
+                          IsChecked="{Binding CategoriesFilter[3].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[3].Name, StringFormat={}3. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="3"
-                          IsChecked="{Binding CategoriesFilter[4].Value}"
-                          Content="Современные спокойные"/>
+                          IsChecked="{Binding CategoriesFilter[4].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[4].Name, StringFormat={}4. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="4"
-                          IsChecked="{Binding CategoriesFilter[5].Value}"
-                          Content="Ретро спокойные"/>
+                          IsChecked="{Binding CategoriesFilter[5].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[5].Name, StringFormat={}5. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="5"
-                          IsChecked="{Binding CategoriesFilter[6].Value}"
-                          Content="Рок"/>
+                          IsChecked="{Binding CategoriesFilter[6].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[6].Name, StringFormat={}6. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="6"
-                          IsChecked="{Binding CategoriesFilter[7].Value}"
-                          Content="Новогодние"/>
+                          IsChecked="{Binding CategoriesFilter[7].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[7].Name, StringFormat={}7. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="7"
-                          IsChecked="{Binding CategoriesFilter[8].Value}"
-                          Content="Другие языки"/>
+                          IsChecked="{Binding CategoriesFilter[8].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[8].Name, StringFormat={}8. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="8"
-                          IsChecked="{Binding CategoriesFilter[9].Value}"
-                          Content="Нет"/>
+                          IsChecked="{Binding CategoriesFilter[9].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[9].Name, StringFormat={}9. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
                 <CheckBox Grid.Row="9"
-                          IsChecked="{Binding CategoriesFilter[0].Value}"
-                          Content="Без категории"/>
+                          IsChecked="{Binding CategoriesFilter[0].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="{Binding CategoriesList[0].Name, StringFormat={}0. {0}}"/>
+                    </CheckBox.Content>
+                </CheckBox>
             </Grid>
-                
+
+            <Grid Grid.Row="9"
+                  Margin="0,10,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0"
+                          IsChecked="{Binding VocalsFilter[0].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="/. Мужской вокал"/>
+                    </CheckBox.Content>
+                </CheckBox>
+                <CheckBox Grid.Row="1"
+                          IsChecked="{Binding VocalsFilter[1].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="*. Женский вокал"/>
+                    </CheckBox.Content>
+                </CheckBox>
+                <CheckBox Grid.Row="2"
+                          IsChecked="{Binding VocalsFilter[2].Value}">
+                    <CheckBox.Content>
+                        <TextBlock Text="-. Дуэт"/>
+                    </CheckBox.Content>
+                </CheckBox>
             </Grid>
+
+            <CheckBox Grid.Row="10"
+                      Margin="0,10,0,0"
+                          IsChecked="{Binding LoungeFilter}">
+                <CheckBox.Content>
+                    <TextBlock Text="Только лаундж"/>
+                </CheckBox.Content>
+            </CheckBox>
+
+
+
+
         </Grid>
-<!--        <uc:Spinner Width="{Binding MainWindowWidth}" Height="{Binding MainWindowHeight}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/> -->
+    </Grid>
+    <!--        <uc:Spinner Width="{Binding MainWindowWidth}" Height="{Binding MainWindowHeight}" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/> -->
 
 </Window>

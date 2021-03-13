@@ -137,14 +137,16 @@ namespace NewSongsProject.ViewModels
 
 
         public List<TrackCategory> CategoriesList { get; set; }
-        
 
         private string TrackPath;
+        private string oldCaption;
         public bool AreChangesWereMade { get; set; }
+        private List<TrackListItem> allTracks;
 
         public RelayCommand ResetTimesOpenedCmd { get; set; }
+        public RelayCommand FileNameCheckerCmd { get; set; }
 
-        public TrackPropertiesDlgVM(AdditionalTrackInfo trackInfo, List<TrackCategory> trackCategories)
+        public TrackPropertiesDlgVM(AdditionalTrackInfo trackInfo, List<TrackCategory> trackCategories, List<TrackListItem> allTracks)
         {
             TrackPath = trackInfo.TrackPath;
             Caption = Path.GetFileNameWithoutExtension(trackInfo.TrackPath);
@@ -157,7 +159,11 @@ namespace NewSongsProject.ViewModels
 
             CategoriesList = trackCategories;
 
+            this.allTracks = allTracks;
+            oldCaption = Caption;
+
             ResetTimesOpenedCmd = new RelayCommand(_ => TimesOpened = 0);
+            FileNameCheckerCmd = new RelayCommand(_ => { }, _ => !string.IsNullOrEmpty(Caption) && (allTracks.FirstOrDefault(t => t.Caption == Caption) == null || Caption == oldCaption));
         }
 
         public TrackPropertiesDlgVM()

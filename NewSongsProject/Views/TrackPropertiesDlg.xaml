@@ -54,7 +54,7 @@
         <TextBox Grid.Row="1"
                  Grid.Column="1"
                  Style="{StaticResource OptionValue}"
-                 Text="{Binding Caption}"/>
+                 Text="{Binding Caption, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="2"
                    Grid.Column="0"
@@ -154,7 +154,8 @@
                     Margin="0,0,15,0"
                     IsDefault="True"
                     Click="Button_Click"
-                    Content="Сохранить"/>
+                    Content="Сохранить"
+                    Command="{Binding FileNameCheckerCmd}"/>
             <Button Width="80"
                     IsCancel="True"
                     Content="Отмена" />

@@ -12,9 +12,9 @@ namespace NewSongsProject.Services
 {
     public static class DialogService
     {
-        public static AdditionalTrackInfo ShowTrackPropertiesDlg(AdditionalTrackInfo trackInfo, List<TrackCategory> trackCategories)
+        public static AdditionalTrackInfo ShowTrackPropertiesDlg(AdditionalTrackInfo trackInfo, List<TrackCategory> trackCategories, List<TrackListItem> allTracks)
         {
-            var dlgVM = new TrackPropertiesDlgVM(trackInfo, trackCategories);
+            var dlgVM = new TrackPropertiesDlgVM(trackInfo, trackCategories, allTracks);
             var dlg = new TrackPropertiesDlg();
             dlg.DataContext = dlgVM;
             if ((bool)dlg.ShowDialog())

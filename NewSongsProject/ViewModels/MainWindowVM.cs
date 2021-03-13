@@ -167,6 +167,30 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+            private TrackFilter _VocalsFilter;
+            public TrackFilter VocalsFilter
+            {
+                get { return _VocalsFilter; }
+                set
+                {
+                    _VocalsFilter = value;
+                    OnPropertyChanged("VocalsFilter");
+                }
+            }
+
+        private bool _loungeFilter;
+        public bool LoungeFilter
+        {
+            get { return _loungeFilter; }
+            set
+            {
+                _loungeFilter = value;
+                if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
+                OnPropertyChanged("LoungeFilter");
+            }
+        }
+
+
 
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -224,7 +248,7 @@ namespace NewSongsProject.ViewModels
         private string currentPath;
         private List<TrackListItem> allTracksList;
         private List<AdditionalTrackInfo> additionalTrackInfos;
-        public List<TrackCategory> CategoriesList;
+        public List<TrackCategory> CategoriesList { get; set; }
 
         private IntPtr mainWndHandle;
 
@@ -252,6 +276,7 @@ namespace NewSongsProject.ViewModels
         public RelayCommand ShowTrackPropertiesCmd { get; set; }
         public RelayCommand ShowAppSettingsCmd { get; set; }
         public RelayCommand AlterCategoryFilterCmd { get; set; }
+        public RelayCommand AlterVocalsFilterCmd { get; set; }
 
         public MainWindowVM()
         {
@@ -275,7 +300,13 @@ namespace NewSongsProject.ViewModels
             {
                 i.PropertyChanged += (s,e) => ProcessSearch();
             }
-            
+
+            VocalsFilter = new TrackFilter() { true, true, true };
+            foreach (var i in VocalsFilter)
+            {
+                i.PropertyChanged += (s, e) => ProcessSearch();
+            }
+
 
             SelectFirstTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.FirstOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) > 0);
             SelectLastTrackCmd = new RelayCommand(_ => SelectedTrackListItem = TrackList.LastOrDefault(), _ => TrackList.IndexOf(SelectedTrackListItem) < TrackList.Count - 1);
@@ -289,6 +320,7 @@ namespace NewSongsProject.ViewModels
             ShowTrackPropertiesCmd = new RelayCommand(_ => EditTrackProperties(), _ => SelectedTrackListItem != null && SelectedTrackListItem.IsDirectory == false);
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
             AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
+            AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
 
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
             tmrPlayStatusChecker = new Timer(_ => PlayStatusCheck(), null, 0, 200);
@@ -335,6 +367,40 @@ namespace NewSongsProject.ViewModels
 
             if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
         }
+       
+        private void AlterVocalsFilter(int vocalsType)
+        {
+            if (vocalsType > -1)
+            {
+                if (VocalsFilter.FilteredList.Count == 3)
+                {
+                    for (int i = 0; i < VocalsFilter.Count; i++)
+                    {
+                        VocalsFilter[i] = i == vocalsType ? true : false;
+                    }
+                }
+                else
+                {
+                    VocalsFilter[vocalsType] = !VocalsFilter[vocalsType];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < VocalsFilter.Count; i++)
+                {
+                    VocalsFilter[i] = true;
+                }
+            }
+
+            if (VocalsFilter.FilteredList.Count == 0)
+            {
+                AlterVocalsFilter(-1);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
+        }
+
 
         private void ShowAppSettings()
         {
@@ -366,7 +432,7 @@ namespace NewSongsProject.ViewModels
                 };
             }
 
-            var updatedInfo = DialogService.ShowTrackPropertiesDlg(trackInfo, CategoriesList);
+            var updatedInfo = DialogService.ShowTrackPropertiesDlg(trackInfo, CategoriesList, allTracksList);
 
             if (updatedInfo == null)
                 return;
@@ -389,11 +455,11 @@ namespace NewSongsProject.ViewModels
                 dirWatcher.EnableRaisingEvents = false;
                 File.Move(oldSelectedTrackListItemPath, updatedInfo.TrackPath);
                 dirWatcher.EnableRaisingEvents = true;
-                RefreshTrackList();
-                ProcessSearch();
                 SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == updatedInfo.TrackPath);
             }
 
+            RefreshTrackList();
+            ProcessSearch(updatedInfo.TrackPath);
             SaveAppSettings();
         }
 
@@ -586,13 +652,17 @@ namespace NewSongsProject.ViewModels
             tmrFocus = new Timer((tmr) => { SetForegroundWindow(mainWndHandle); if (tmrFocusCounter > 10) tmrFocus.Change(Timeout.Infinite, Timeout.Infinite); tmrFocusCounter++; }, 0, 0, 100);
         }
 
-        private async void ProcessSearch()
+        private async void ProcessSearch(string pathItemToSelect = null)
         {
             await Task.Run(() =>
             {
                 if (allTracksList != null)
                 {
-                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => CategoriesFilter.FilteredList.Contains(t.Category)).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (CategoriesFilter.FilteredList.Contains(t.Category) &&
+                                                                                            VocalsFilter.FilteredList.Contains((int)t.VocalType) &&
+                                                                                            (LoungeFilter == true ? t.IsLounge == true : true)) || t.IsDirectory == true).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (!string.IsNullOrEmpty(pathItemToSelect))
+                        Application.Current.Dispatcher.Invoke(new Action(() => SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == pathItemToSelect)));
                 }
             });
         }

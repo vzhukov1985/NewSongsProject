@@ -96,10 +96,41 @@ namespace NewSongsProject.Views
 
             var dc = (MainWindowVM)DataContext;
 
-            if (e.Text == ".")
+            if (e.Text == "." || e.Text == ",")
             {
                 dc.AlterCategoryFilterCmd.Execute("-1");
+                dc.AlterVocalsFilterCmd.Execute(-1);
+                dc.LoungeFilter = false;
                 e.Handled = true;
+            }
+
+            if (e.Text == "/")
+            {
+                dc.AlterVocalsFilterCmd.Execute(0);
+                e.Handled = true;
+            }
+
+            if (e.Text == "*")
+            {
+                dc.AlterVocalsFilterCmd.Execute(1);
+                e.Handled = true;
+            }
+
+            if (e.Text == "-")
+            {
+                dc.AlterVocalsFilterCmd.Execute(2);
+                e.Handled = true;
+            }
+            
+            if (e.Text == "+")
+            {
+                dc.AlterVocalsFilterCmd.Execute(-1);
+                e.Handled = true;
+            }
+
+            if (e.Text == "\\")
+            {
+                dc.LoungeFilter = !dc.LoungeFilter;
             }
 
             if (!string.IsNullOrEmpty(e.Text) && searchKeys.Contains(e.Text[0]))
@@ -112,6 +143,36 @@ namespace NewSongsProject.Views
         private void MainWnd_Loaded(object sender, RoutedEventArgs e)
         {
             ((MainWindowVM)DataContext).SetMainWindowHandle(new WindowInteropHelper(MainWnd).Handle);
+        }
+
+        private void MainWnd_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var scv = GetScrollViewer(TrackList) as ScrollViewer;
+            scv.ScrollToHorizontalOffset(scv.HorizontalOffset - e.Delta);
+            e.Handled = true;
+        }
+
+        public static DependencyObject GetScrollViewer(DependencyObject o)
+        {
+            // Return the DependencyObject if it is a ScrollViewer
+            if (o is ScrollViewer)
+            { return o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetScrollViewer(child);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
         }
     }
 }
