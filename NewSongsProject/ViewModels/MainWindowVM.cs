@@ -95,7 +95,6 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _searchText = value;
-                ProcessSearch();
                 OnPropertyChanged("SearchText");
             }
         }
@@ -313,9 +312,9 @@ namespace NewSongsProject.ViewModels
             ProcessTrackListItemCmd = new RelayCommand(_ => ProcessTrackListItem(), _ => SelectedTrackListItem != null);
             UpFolderCmd = new RelayCommand(_ => ChangeDirectoryAsync(Directory.GetParent(currentPath).FullName), _ => Directory.GetParent(currentPath) != null);
             SaveSettingsCmd = new RelayCommand(_ => SaveAppSettings());
-            AddSymbolSearchCmd = new RelayCommand((symbol) => SearchText += (string)symbol);
-            RemoveSymbolSearchCmd = new RelayCommand(_ => SearchText = SearchText.Substring(0, SearchText.Length - 1), _ => SearchText.Length > 0);
-            ClearSearchCmd = new RelayCommand(_ => SearchText = "");
+            AddSymbolSearchCmd = new RelayCommand((symbol) => { SearchText += (string)symbol; ProcessSearch(); });
+            RemoveSymbolSearchCmd = new RelayCommand(_ => { SearchText = SearchText.Substring(0, SearchText.Length - 1); ProcessSearch(); }, _ => SearchText.Length > 0);
+            ClearSearchCmd = new RelayCommand(_ => { SearchText = ""; ProcessSearch(); });
             PlayStopCmd = new RelayCommand(_ => PlayStop());
             ShowTrackPropertiesCmd = new RelayCommand(_ => EditTrackProperties(), _ => SelectedTrackListItem != null && SelectedTrackListItem.IsDirectory == false);
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
