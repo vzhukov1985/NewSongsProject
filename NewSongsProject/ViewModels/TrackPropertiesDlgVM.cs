@@ -117,6 +117,30 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private string _key;
+        public string Key
+        {
+            get { return _key; }
+            set
+            {
+                _key = value;
+                OnPropertyChanged("Key");
+            }
+        }
+
+        private double _tempo;
+        public double Tempo
+        {
+            get { return _tempo; }
+            set
+            {
+                _tempo = value;
+                OnPropertyChanged("Tempo");
+            }
+        }
+
+
+
         private VocalType _vocalType;
         public VocalType VocalType
         {
@@ -154,6 +178,8 @@ namespace NewSongsProject.ViewModels
             Category = trackInfo.Category;
             VocalType = trackInfo.VocalType;
             IsLounge = trackInfo.IsLounge;
+            Key = trackInfo.Key;
+            Tempo = trackInfo.Tempo;
             Tags = string.Join(" ", trackInfo.Tags.ToArray());
             TimesOpened = trackInfo.TimesOpened;
 

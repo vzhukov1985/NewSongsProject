@@ -15,6 +15,7 @@ namespace NewSongsProject.Models
         public int MainWindowWidth { get; set; }
         public double MainWindowOpacity { get; set; }
         public bool IsMainWindowMaximized { get; set; }
+        public bool AreTracksColored { get; set; }
 
         public int TrackListFontSize { get; set; }
 
@@ -30,6 +31,7 @@ namespace NewSongsProject.Models
             TrackListFontSize = 14;
             MainWindowOpacity = 1;
             IsMainWindowMaximized = false;
+            AreTracksColored = true;
 
             TrackCategories = new List<TrackCategory>()
                 {

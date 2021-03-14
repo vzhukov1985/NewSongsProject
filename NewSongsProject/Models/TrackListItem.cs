@@ -11,9 +11,12 @@ namespace NewSongsProject.Models
         public string Caption { get; set; }
         public bool IsDirectory { get; set; }
         public string FullPath { get; set; }
+        public string FullName { get; set; }
         public int Category { get; set; }
         public VocalType VocalType { get; set; }
         public bool IsLounge { get; set; }
+        public string Key { get; set; }
+        public double Tempo { get; set; }
         public List<string> Tags { get; set; }
         public int TimesOpened { get; set; }
 
@@ -32,6 +35,7 @@ namespace NewSongsProject.Models
             IsLounge = source.IsLounge;
             Tags = source.Tags;
             TimesOpened = source.TimesOpened;
+            Tempo = 0;
         }
     }
 }

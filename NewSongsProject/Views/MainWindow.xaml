@@ -44,6 +44,8 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <conv:IsPlayingToColorConverter x:Key="IsPlayingToColorConverter"/>
         <conv:OneIndexConverter x:Key="OneIndexConverter"/>
+        <conv:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+        <conv:TrackCategoryToColorConverter x:Key="TrackCategoryToColorConverter"/>
     </Window.Resources>
 
     <Window.InputBindings>
@@ -58,7 +60,8 @@
         <KeyBinding Key="Esc" Command="{Binding ClearSearchCmd}"/>
 
         <KeyBinding Key="Tab" Command="{Binding ShowTrackPropertiesCmd}"/>
-        
+        <KeyBinding Key="F5" Command="{Binding AlterTracksColoredStateCmd}"/>
+
         <KeyBinding Key="NumPad0" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="0"/>
         <KeyBinding Key="NumPad1" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="1"/>
         <KeyBinding Key="NumPad2" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="2"/>
@@ -105,6 +108,15 @@
                     <TextBlock Text="{Binding Caption}" 
                                FontWeight="{Binding IsDirectory, Converter={StaticResource ItemTypeToFontConverter}}"
                                FontSize="{Binding DataContext.TrackListFontSize, RelativeSource={RelativeSource AncestorType=Window, Mode=FindAncestor}}">
+
+                        <TextBlock.Foreground>
+                            <MultiBinding Converter="{StaticResource TrackCategoryToColorConverter}">
+                                <Binding Path="DataContext.AreTracksColored" ElementName="MainWnd"/>
+                                <Binding Path="Category"/>
+                                <Binding Path="DataContext.CategoriesList" ElementName="MainWnd"/>
+                            </MultiBinding>
+                        </TextBlock.Foreground>
+
                         <TextBlock.InputBindings>
                             <MouseBinding Gesture="LeftDoubleClick" Command="{Binding ElementName=MainWnd, Path=DataContext.ProcessTrackListItemCmd}"/>
                         </TextBlock.InputBindings>
@@ -280,61 +292,61 @@
                 <CheckBox Grid.Row="0"
                           IsChecked="{Binding CategoriesFilter[1].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[1].Name, StringFormat={}1. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[1].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[1].Name, StringFormat={}1. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="1"
                           IsChecked="{Binding CategoriesFilter[2].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[2].Name, StringFormat={}2. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[2].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[2].Name, StringFormat={}2. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="2"
                           IsChecked="{Binding CategoriesFilter[3].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[3].Name, StringFormat={}3. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[3].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[3].Name, StringFormat={}3. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="3"
                           IsChecked="{Binding CategoriesFilter[4].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[4].Name, StringFormat={}4. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[4].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[4].Name, StringFormat={}4. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="4"
                           IsChecked="{Binding CategoriesFilter[5].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[5].Name, StringFormat={}5. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[5].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[5].Name, StringFormat={}5. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="5"
                           IsChecked="{Binding CategoriesFilter[6].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[6].Name, StringFormat={}6. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[6].Color, Converter={StaticResource ColorToBrushConverter}}"  Text="{Binding CategoriesList[6].Name, StringFormat={}6. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="6"
                           IsChecked="{Binding CategoriesFilter[7].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[7].Name, StringFormat={}7. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[7].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[7].Name, StringFormat={}7. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="7"
                           IsChecked="{Binding CategoriesFilter[8].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[8].Name, StringFormat={}8. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[8].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[8].Name, StringFormat={}8. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="8"
                           IsChecked="{Binding CategoriesFilter[9].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[9].Name, StringFormat={}9. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[9].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[9].Name, StringFormat={}9. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
                 <CheckBox Grid.Row="9"
                           IsChecked="{Binding CategoriesFilter[0].Value}">
                     <CheckBox.Content>
-                        <TextBlock Text="{Binding CategoriesList[0].Name, StringFormat={}0. {0}}"/>
+                        <TextBlock Foreground="{Binding CategoriesList[0].Color, Converter={StaticResource ColorToBrushConverter}}" Text="{Binding CategoriesList[0].Name, StringFormat={}0. {0}}"/>
                     </CheckBox.Content>
                 </CheckBox>
             </Grid>

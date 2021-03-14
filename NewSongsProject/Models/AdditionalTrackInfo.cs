@@ -13,6 +13,8 @@ namespace NewSongsProject.Models
         public int Category { get; set; }
         public VocalType VocalType { get; set; }
         public bool IsLounge { get; set; }
+        public string Key { get; set; }
+        public double Tempo { get; set; }
         public List<string> Tags { get; set; }
         public int TimesOpened { get; set; }
 
@@ -21,6 +23,8 @@ namespace NewSongsProject.Models
             Category = 0;
             Tags = new List<string>();
             TimesOpened = 0;
+            Tempo = 0;
+            VocalType = VocalType.Male;
         }
     }
 

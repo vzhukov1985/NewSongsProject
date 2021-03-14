@@ -29,6 +29,8 @@ namespace NewSongsProject.Services
                     Category = dlgVM.Category,
                     VocalType = dlgVM.VocalType,
                     IsLounge = dlgVM.IsLounge,
+                    Key = dlgVM.Key,
+                    Tempo = dlgVM.Tempo,
                     Tags = dlgVM.Tags.Split(' ').Where(s => !string.IsNullOrEmpty(s)).ToList(),
                     TimesOpened = dlgVM.TimesOpened
                 };

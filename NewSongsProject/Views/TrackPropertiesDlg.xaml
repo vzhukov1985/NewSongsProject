@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:NewSongsProject.Views"
         xmlns:vm="clr-namespace:NewSongsProject.ViewModels"
         mc:Ignorable="d"
-        Title="Свойства трека" Height="430" Width="390" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="Свойства трека" Height="470" Width="390" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Window.DataContext>
         <vm:TrackPropertiesDlgVM/>
     </Window.DataContext>
@@ -30,6 +30,8 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -63,7 +65,7 @@
         <TextBox Grid.Row="2"
                  Grid.Column="1"
                  Style="{StaticResource OptionValue}"
-                 Text="{Binding FullName}"/>
+                 Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="3"
                    Grid.Column="0"
@@ -112,27 +114,50 @@
                    Grid.Column="0"
                    Style="{StaticResource OptionName}"
                    VerticalAlignment="Top"
-                   Text="Тэги для поиска:"/>
+                   Text="Тональность:"/>
         <TextBox Grid.Row="6"
+                 Grid.Column="1"
+                 VerticalAlignment="Top"
+                 Style="{StaticResource OptionValue}"
+                 Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"/>
+        
+        <TextBlock Grid.Row="7"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   VerticalAlignment="Top"
+                   Text="Темп:"/>
+        
+        <TextBox Grid.Row="7"
+                 Grid.Column="1"
+                 VerticalAlignment="Top"
+                 Style="{StaticResource OptionValue}"
+                 Text="{Binding Tempo, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="8"
+                   Grid.Column="0"
+                   Style="{StaticResource OptionName}"
+                   VerticalAlignment="Top"
+                   Text="Тэги для поиска:"/>
+        <TextBox Grid.Row="8"
                  Grid.Column="1"
                  TextWrapping="Wrap"
                  VerticalAlignment="Top"
                  Height="100"
                  Style="{StaticResource OptionValue}"
-                 Text="{Binding Tags}"/>
+                 Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <TextBlock Grid.Row="7"
+        <TextBlock Grid.Row="9"
                    Grid.Column="0"
                    Style="{StaticResource OptionName}"
                    Text="Проиграно раз:"/>
 
-        <TextBlock Grid.Row="7"
+        <TextBlock Grid.Row="9"
                    Grid.Column="1"
                    VerticalAlignment="Top" 
                    Style="{StaticResource OptionValue}"
                    Text="{Binding TimesOpened}"/>
 
-        <Button Grid.Row="7"
+        <Button Grid.Row="9"
                 Grid.Column="1"
                 VerticalAlignment="Top" 
                 Style="{StaticResource OptionValue}"
@@ -144,7 +169,7 @@
 
 
 
-        <StackPanel Grid.Row="8"
+        <StackPanel Grid.Row="10"
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     Margin="0,10,10,5"

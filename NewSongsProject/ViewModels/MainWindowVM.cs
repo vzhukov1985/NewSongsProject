@@ -245,6 +245,18 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private bool _areTracksColored;
+        public bool AreTracksColored
+        {
+            get { return _areTracksColored; }
+            set
+            {
+                _areTracksColored = value;
+                OnPropertyChanged("AreTracksColored");
+            }
+        }
+
+
 
 
 
@@ -348,6 +360,7 @@ namespace NewSongsProject.ViewModels
         public RelayCommand SelectPrevPlaylistItemCmd { get; set; }
         public RelayCommand SelectNextPlaylistItemCmd { get; set; }
         public RelayCommand ProcessPlaylistItemCmd { get; set; }
+        public RelayCommand AlterTracksColoredStateCmd { get; set; }
 
 
         public MainWindowVM()
@@ -395,6 +408,7 @@ namespace NewSongsProject.ViewModels
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
             AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
+            AlterTracksColoredStateCmd = new RelayCommand(_ => AreTracksColored = !AreTracksColored);
 
             AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); if (Playlist.Count == 1) SelectedPlaylistItem = Playlist[0]; }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
             MovePlaylistItemUpCmd = new RelayCommand(_ => MovePlaylistItemUp(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
@@ -424,17 +438,22 @@ namespace NewSongsProject.ViewModels
 
         private void ClearSearch()
         {
+
             if (string.IsNullOrEmpty(SearchText))
             {
-                AlterCategoryFilter(-1);
-                AlterVocalsFilter(-1);
-                LoungeFilter = false;
+                if (CategoriesFilter.Any(f => !f.Value) || VocalsFilter.Any(f => !f.Value) || LoungeFilter)
+                {
+                    AlterCategoryFilter(-1);
+                    AlterVocalsFilter(-1);
+                    LoungeFilter = false;
+                    ProcessSearch();
+                }
             }
             else
             {
                 SearchText = "";
+                ProcessSearch();
             }
-            ProcessSearch();
         }
 
         private void SelectPlaylistItem(string path)
@@ -761,11 +780,14 @@ namespace NewSongsProject.ViewModels
                     var existingInfo = additionalTrackInfos.FirstOrDefault(i => i.TrackPath == item.FullPath);
                     if (existingInfo != null)
                     {
+                        item.FullName = existingInfo.FullName;
                         item.Category = existingInfo.Category;
-                        item.Tags = existingInfo.Tags;
-                        item.TimesOpened = existingInfo.TimesOpened;
                         item.VocalType = existingInfo.VocalType;
                         item.IsLounge = existingInfo.IsLounge;
+                        item.Key = existingInfo.Key;
+                        item.Tempo = existingInfo.Tempo;
+                        item.Tags = existingInfo.Tags;
+                        item.TimesOpened = existingInfo.TimesOpened;
                     }
                 }
 
@@ -913,7 +935,7 @@ namespace NewSongsProject.ViewModels
             MainWindowOpacity = appSettings.MainWindowOpacity;
             MainWindowState = appSettings.IsMainWindowMaximized ? WindowState.Maximized : WindowState.Normal;
             TrackListFontSize = appSettings.TrackListFontSize;
-
+            AreTracksColored = appSettings.AreTracksColored;
 
             CategoriesList = appSettings.TrackCategories;
 
@@ -934,10 +956,11 @@ namespace NewSongsProject.ViewModels
             appSettings.TrackListFontSize = TrackListFontSize;
             appSettings.MainWindowOpacity = MainWindowOpacity;
             appSettings.IsMainWindowMaximized = MainWindowState == WindowState.Maximized ? true : false;
+            appSettings.AreTracksColored = AreTracksColored;
             appSettings.TrackCategories = CategoriesList;
             var fileData = JsonConvert.SerializeObject(appSettings);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\Settings.json", fileData);
-            fileData = JsonConvert.SerializeObject(CategoriesList);
+            fileData = JsonConvert.SerializeObject(additionalTrackInfos);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\TracksInfo.json", fileData);
         }
 
