@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,9 +25,25 @@ namespace NewSongsProject.Views
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        private IntPtr _windowHandle;
+        private HwndSource _source;
+        private const int HOTKEY_ID = 9000;
+
         public MainWindow()
         {
-            DataContext = new MainWindowVM();
             InitializeComponent();
         }
 
@@ -86,6 +103,21 @@ namespace NewSongsProject.Views
                     e.Handled = true;
                     break;
 
+                case Key.F1:
+                    this.Activate();
+                    break;
+
+                case Key.F2:
+                    var wndHandle = FindWindow("Cakewalk Core", null);
+
+                    if (wndHandle != IntPtr.Zero)
+                    {
+                        SetForegroundWindow(wndHandle);
+                        return;
+                    }
+                    break;
+
+
                 default:
                     break;
             }
@@ -144,7 +176,7 @@ namespace NewSongsProject.Views
                 dc.AlterVocalsFilterCmd.Execute(2);
                 e.Handled = true;
             }
-            
+
             if (e.Text == "+")
             {
                 dc.AlterVocalsFilterCmd.Execute(-1);
@@ -196,6 +228,98 @@ namespace NewSongsProject.Views
                 }
             }
             return null;
+        }
+
+        private void WndClose_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Close();
+        }
+
+        private void WndMaximize_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+            {
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                this.WindowState = WindowState.Maximized;
+            }
+        }
+
+        private void WndMinimize_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                this.WindowState = WindowState.Minimized;
+            }
+        }
+
+        private void Header_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 1)
+            {
+                this.DragMove();
+            }
+
+            if (e.ClickCount == 2)
+            {
+                WndMaximize_PreviewMouseLeftButtonDown(sender, e);
+            }
+        }
+
+        private void MainWnd_SourceInitialized(object sender, EventArgs e)
+        {
+            _windowHandle = new WindowInteropHelper(this).Handle;
+            _source = HwndSource.FromHwnd(_windowHandle);
+            _source.AddHook(HwndHook);
+
+            RegisterHotKey(_windowHandle, HOTKEY_ID, 0, 0x70); //F1
+        }
+
+        private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            const int WM_HOTKEY = 0x0312;
+            switch (msg)
+            {
+                case WM_HOTKEY:
+                    switch (wParam.ToInt32())
+                    {
+                        case HOTKEY_ID:
+                            int vkey = (((int)lParam >> 16) & 0xFFFF);
+                            if (vkey == 0x70)
+                            {
+                                this.Activate();
+                            }
+                            handled = true;
+                            break;
+                    }
+                    break;
+            }
+            return IntPtr.Zero;
+        }
+
+        private void MainWnd_Closed(object sender, EventArgs e)
+        {
+            _source.RemoveHook(HwndHook);
+            UnregisterHotKey(_windowHandle, HOTKEY_ID);
+            //base.OnClosed(e);
+        }
+
+        private void MainWnd_StateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                MainGrid.Margin = new Thickness(7);
+            }
+            else
+            {
+                MainGrid.Margin = new Thickness(0);
+            }
         }
     }
 }

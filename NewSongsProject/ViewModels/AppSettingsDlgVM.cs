@@ -23,11 +23,42 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private int _fontSize;
+        public int FontSize
+        {
+            get { return _fontSize; }
+            set
+            {
+                _fontSize = value;
+                OnPropertyChanged("FontSize");
+            }
+        }
+
+        private int _opacity;
+        public int Opacity
+        {
+            get { return _opacity; }
+            set
+            {
+                _opacity = value;
+                OnPropertyChanged("Opacity");
+            }
+        }
+
+
+
         public RelayCommand ShowSelectColorDialogCmd { get; set; }
 
-        public AppSettingsDlgVM(AppSettings appSettings, List<TrackCategory> trackCategories)
+        public AppSettingsDlgVM(AppSettings appSettings)
         {
-            Categories = trackCategories;
+            FontSize = appSettings.TrackListFontSize;
+            Opacity = (int)(appSettings.MainWindowOpacity * 100);
+
+            Categories = new List<TrackCategory>();
+            foreach (var cat in appSettings.TrackCategories)
+            {
+                Categories.Add((TrackCategory)cat.Clone());
+            }
 
             ShowSelectColorDialogCmd = new RelayCommand((cat) => ChangeCategoryColor((TrackCategory)cat));
         }

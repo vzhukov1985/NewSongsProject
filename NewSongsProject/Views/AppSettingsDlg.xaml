@@ -15,6 +15,11 @@
 
     <Window.Resources>
         <conv:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+        <Style x:Key="SettingsHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="10">
@@ -34,17 +39,77 @@
                    Style="{StaticResource DialogHeader}"
                    Text="Настройки приложения"/>
 
+        <Grid Grid.Row="1"
+              Grid.Column="0"
+              Margin="0,0,5,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Style="{StaticResource SettingsHeader}"
+                       Text="Вид:"/>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                       Text="Размер шрифта:"/>
+
+                <Slider Grid.Column="1"
+                        Margin="10,0,10,0"
+                        x:Name="FontSizeSlider"
+                        Minimum="5"
+                        Maximum="20"
+                        TickFrequency="1"
+                        IsSnapToTickEnabled="True"
+                        Value="{Binding FontSize, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="{Binding ElementName=FontSizeSlider, Path=Value}"/>
+            </Grid>
+
+            <Grid Grid.Row="2"
+                  Margin="0,5,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                       Text="Прозрачность окна:"/>
+
+                <Slider Grid.Column="1"
+                        Margin="10,0,10,0"
+                        x:Name="OpacitySlider"
+                        Minimum="10"
+                        Maximum="100"
+                        TickFrequency="1"
+                        IsSnapToTickEnabled="True"
+                        Value="{Binding Opacity, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat={}{0}%}"/>
+            </Grid>
+        </Grid>
+
         <Grid  Grid.Row="1"
-               Grid.Column="1">
+               Grid.Column="1"
+               Margin="10,0,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       Margin="0,0,0,5"
+                       Style="{StaticResource SettingsHeader}"
                        Text="Категории:"/>
             <ItemsControl Grid.Row="1"
                           ItemsSource="{Binding Categories}" 

@@ -39,14 +39,23 @@ namespace NewSongsProject.Services
             }
         }
 
-        public static void ShowAppSettingsDlg(AppSettings appSettings, List<TrackCategory> trackCategories)
+        public static AppSettings ShowAppSettingsDlg(AppSettings appSettings)
         {
-            var dlgVM = new AppSettingsDlgVM(appSettings, trackCategories.ToList());
+            var dlgVM = new AppSettingsDlgVM(appSettings);
             var dlg = new AppSettingsDlg();
             dlg.DataContext = dlgVM;
             if (dlg.ShowDialog() == true)
             {
-               // a
+                return new AppSettings()
+                {
+                    TrackListFontSize = dlgVM.FontSize,
+                    MainWindowOpacity = (double)dlgVM.Opacity / 100,
+                    TrackCategories = dlgVM.Categories.ToList()
+                };
+            }
+            else
+            {
+                return null;
             }
         }
 

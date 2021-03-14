@@ -4,6 +4,8 @@ Ctrl+Esc - Папка вверх
 Tab - Параметры трека
 Enter - Открыть/Запустить сразу трек
 Space - Play-Stop
+F1 - Активировать SongsProject
+F2 - Активировать Sonar
 
 Insert (Shift-Numpad0 на ноуте) - добавить песню в плейлист
 Ctrl-Up - По плейлисту вверх

@@ -1,5 +1,6 @@
 ﻿using NewSongsProject.Models;
 using NewSongsProject.Services;
+using NewSongsProject.Views;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -211,6 +212,38 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private List<TrackCategory> _categoriesList;
+        public List<TrackCategory> CategoriesList
+        {
+            get { return _categoriesList; }
+            set
+            {
+                _categoriesList = value;
+                OnPropertyChanged("CategoriesList");
+            }
+        }
+
+        private double _mainWindowOpacity;
+        public double MainWindowOpacity
+        {
+            get { return _mainWindowOpacity; }
+            set
+            {
+                _mainWindowOpacity = value;
+                OnPropertyChanged("MainWindowOpacity");
+            }
+        }
+
+        private WindowState _mainWindowState;
+        public WindowState MainWindowState
+        {
+            get { return _mainWindowState; }
+            set
+            {
+                _mainWindowState = value;
+                OnPropertyChanged("MainWindowState");
+            }
+        }
 
 
 
@@ -266,11 +299,11 @@ namespace NewSongsProject.ViewModels
             public int Bottom;      // y position of lower-right corner
         }
 
-        AppSettings appSettings;
+        private AppSettings appSettings;
         private string currentPath;
         private List<TrackListItem> allTracksList;
         private List<AdditionalTrackInfo> additionalTrackInfos;
-        public List<TrackCategory> CategoriesList { get; set; }
+        
 
         private IntPtr mainWndHandle;
 
@@ -287,6 +320,7 @@ namespace NewSongsProject.ViewModels
         private FileSystemWatcher dirWatcher;
 
         private SemaphoreSlim searchSmph;
+
 
         public RelayCommand SelectFirstTrackCmd { get; set; }
         public RelayCommand SelectLastTrackCmd { get; set; }
@@ -573,7 +607,14 @@ namespace NewSongsProject.ViewModels
 
         private void ShowAppSettings()
         {
-            DialogService.ShowAppSettingsDlg(appSettings, CategoriesList);
+            var dlgResult = DialogService.ShowAppSettingsDlg(appSettings);
+            if (dlgResult != null)
+            {
+                appSettings = dlgResult;
+                TrackListFontSize = appSettings.TrackListFontSize;
+                MainWindowOpacity = appSettings.MainWindowOpacity;
+                CategoriesList = appSettings.TrackCategories;
+            }
         }
 
         private void DirContentsChanged(string path)
@@ -854,7 +895,7 @@ namespace NewSongsProject.ViewModels
             string settingsFilePath = AppDomain.CurrentDomain.BaseDirectory + "\\Settings.json";
             if (File.Exists(settingsFilePath))
             {
-                appSettings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(settingsFilePath));
+                appSettings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(settingsFilePath), new JsonSerializerSettings() { ObjectCreationHandling = ObjectCreationHandling.Replace });
             }
 
             if (Directory.Exists(appSettings.InitialPath))
@@ -869,29 +910,12 @@ namespace NewSongsProject.ViewModels
             MainWindowY = appSettings.MainWindowY;
             MainWindowHeight = appSettings.MainWindowHeight;
             MainWindowWidth = appSettings.MainWindowWidth;
+            MainWindowOpacity = appSettings.MainWindowOpacity;
+            MainWindowState = appSettings.IsMainWindowMaximized ? WindowState.Maximized : WindowState.Normal;
             TrackListFontSize = appSettings.TrackListFontSize;
 
-            string trackCategoriesPath = AppDomain.CurrentDomain.BaseDirectory + "\\Categories.json";
-            if (File.Exists(trackCategoriesPath))
-            {
-                CategoriesList = JsonConvert.DeserializeObject<List<TrackCategory>>(File.ReadAllText(trackCategoriesPath));
-            }
-            else
-            {
-                CategoriesList = new List<TrackCategory>()
-                {
-                    new TrackCategory() {Name = "Без категории", IsChangeable = false},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                    new TrackCategory() {Name = "Нет"},
-                };
-            }
+
+            CategoriesList = appSettings.TrackCategories;
 
             string tracksInfoPath = AppDomain.CurrentDomain.BaseDirectory + "\\TracksInfo.json";
             if (File.Exists(tracksInfoPath))
@@ -908,11 +932,12 @@ namespace NewSongsProject.ViewModels
             appSettings.MainWindowHeight = MainWindowHeight;
             appSettings.MainWindowWidth = MainWindowWidth;
             appSettings.TrackListFontSize = TrackListFontSize;
+            appSettings.MainWindowOpacity = MainWindowOpacity;
+            appSettings.IsMainWindowMaximized = MainWindowState == WindowState.Maximized ? true : false;
+            appSettings.TrackCategories = CategoriesList;
             var fileData = JsonConvert.SerializeObject(appSettings);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\Settings.json", fileData);
             fileData = JsonConvert.SerializeObject(CategoriesList);
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\Categories.json", fileData);
-            fileData = JsonConvert.SerializeObject(additionalTrackInfos);
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "\\TracksInfo.json", fileData);
         }
 

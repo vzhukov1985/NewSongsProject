@@ -13,8 +13,12 @@ namespace NewSongsProject.Models
         public int MainWindowY { get; set; }
         public int MainWindowHeight { get; set; }
         public int MainWindowWidth { get; set; }
+        public double MainWindowOpacity { get; set; }
+        public bool IsMainWindowMaximized { get; set; }
 
         public int TrackListFontSize { get; set; }
+
+        public List<TrackCategory> TrackCategories { get; set; }
 
         public AppSettings()
         {
@@ -24,6 +28,22 @@ namespace NewSongsProject.Models
             MainWindowHeight = 450;
             MainWindowWidth = 800;
             TrackListFontSize = 14;
+            MainWindowOpacity = 1;
+            IsMainWindowMaximized = false;
+
+            TrackCategories = new List<TrackCategory>()
+                {
+                    new TrackCategory() {Name = "Без категории", IsChangeable = false},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                    new TrackCategory() {Name = "Нет"},
+                };
         }
     }
 }
