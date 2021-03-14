@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -896,14 +897,20 @@ namespace NewSongsProject.ViewModels
         {
             try
             {
+                Stopwatch tmr = new Stopwatch();
+                tmr.Start();
                 if (allTracksList != null)
                 {
-                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (CategoriesFilter.FilteredList.Contains(t.Category) &&
-                                                                                            VocalsFilter.FilteredList.Contains((int)t.VocalType) &&
+                    var catFilterIndices = CategoriesFilter.FilteredList;
+                    var vocFilterIndices = VocalsFilter.FilteredList;
+                    TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (catFilterIndices.Contains(t.Category) &&
+                                                                                            vocFilterIndices.Contains((int)t.VocalType) &&
                                                                                             (LoungeFilter == true ? t.IsLounge == true : true)) || t.IsDirectory == true).ToList() : allTracksList.FindAll(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
                     if (!string.IsNullOrEmpty(pathItemToSelect))
                         SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == pathItemToSelect);
                 }
+                tmr.Stop();
+                Debug.WriteLine(tmr.ElapsedMilliseconds);
             }
             catch
             {

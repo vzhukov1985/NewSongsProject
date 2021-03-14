@@ -8,6 +8,7 @@
         xmlns:conv="clr-namespace:NewSongsProject.Converters"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:uc="clr-namespace:NewSongsProject.UserControls"
+        xmlns:wp="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
         mc:Ignorable="d"
         x:Name="MainWnd"
         Title="HOLLYWOOD BAND Tracks" 
@@ -95,19 +96,27 @@
                   SelectionChanged="TrackListView_SelectionChanged"
                   IsSynchronizedWithCurrentItem="True"
                   SelectedItem="{Binding SelectedTrackListItem}"
+                  MaxHeight="1300"
+                  MaxWidth="2000"
                   Name="TrackList">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Vertical" 
-                               IsItemsHost="True" />
-                </ItemsPanelTemplate>
+                    <wp:VirtualizingWrapPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate> 
             </ListView.ItemsPanel>
+
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="MaxWidth" Value="160"/>
+                    <Setter Property="MaxHeight" Value="30"/>
+                </Style>
+            </ListView.ItemContainerStyle>
 
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Caption}" 
                                FontWeight="{Binding IsDirectory, Converter={StaticResource ItemTypeToFontConverter}}"
-                               FontSize="{Binding DataContext.TrackListFontSize, RelativeSource={RelativeSource AncestorType=Window, Mode=FindAncestor}}">
+                               FontSize="{Binding DataContext.TrackListFontSize, ElementName=MainWnd}" Width="160">
 
                         <TextBlock.Foreground>
                             <MultiBinding Converter="{StaticResource TrackCategoryToColorConverter}">
