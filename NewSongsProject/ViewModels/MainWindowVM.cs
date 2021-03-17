@@ -855,32 +855,43 @@ namespace NewSongsProject.ViewModels
             var wndHandle = FindWindow("Cakewalk Core", null);
             if (wndHandle != IntPtr.Zero)
             {
-
+                bool stopSearching = false;
                 var mnuHandle = GetMenu(wndHandle);
 
-                for (uint i = 0; i < GetMenuItemCount(mnuHandle); i++)
+                for (uint i = 0; i < GetMenuItemCount(mnuHandle) && stopSearching == false; i++)
                 {
                     StringBuilder menuString = new StringBuilder();
                     GetMenuString(mnuHandle, i, menuString, 255, 0x00000400);
-                    if (menuString.Equals(new StringBuilder("&File")))
+                    if (menuString.ToString() == "&File")
                     {
                         var subMenuHandle = GetSubMenu(mnuHandle, i);
-                        for (uint j = 0; j < GetMenuItemCount(subMenuHandle); j++)
+                        for (uint j = 0; j < GetMenuItemCount(subMenuHandle) && stopSearching == false; j++)
                         {
                             StringBuilder subMenuString = new StringBuilder();
                             GetMenuString(subMenuHandle, j, subMenuString, 255, 0x00000400);
-                            if (subMenuString.Equals(new StringBuilder("&Close")))
+                            if (subMenuString.ToString() == "&Close")
                             {
+                                stopSearching = true;
                                 PostMessage(wndHandle, 0x0111, (int)GetMenuItemID((IntPtr)subMenuHandle, (int)j), 0);
 
                                 if (PerformanceMode)
                                 {
                                     Thread.Sleep(50);
                                     var dlgHandle = FindWindow("#32770", "Cakewalk");
-                                    var btHandle = FindWindowEx(dlgHandle, IntPtr.Zero, "Button", "&Нет");
-                                    PostMessage(btHandle, 0x0201, 0x0001, 0);
-                                    PostMessage(btHandle, 0x0202, 0x0001, 0);
+                                    if (dlgHandle != IntPtr.Zero)
+                                    {
+                                        var btHandle = FindWindowEx(dlgHandle, IntPtr.Zero, "Button", "&Нет");
+                                        if (btHandle != IntPtr.Zero)
+                                        {
+                                            PostMessage(btHandle, 0x0201, 0x0001, 0);
+                                            PostMessage(btHandle, 0x0202, 0x0001, 0);
+                                        }
+                                    }
                                 }
+                            }
+                            if (subMenuString.ToString() == "S&tart Screen...")
+                            {
+                                stopSearching = true;
                             }
                         }
                     }
