@@ -108,6 +108,11 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _preformanceMode = value;
+                if (value == false)
+                {
+                    SetTime = TimeSpan.Zero;
+                    tmrSet.Stop();
+                }
                 OnPropertyChanged("PerformanceMode");
             }
         }
@@ -257,7 +262,18 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private TimeSpan _setTime;
+        public TimeSpan SetTime
+        {
+            get { return _setTime; }
+            set
+            {
+                _setTime = value;
+                OnPropertyChanged("SetTime");
+            }
+        }
 
+        
 
 
 
@@ -316,7 +332,8 @@ namespace NewSongsProject.ViewModels
         private string currentPath;
         private List<TrackListItem> allTracksList;
         private List<AdditionalTrackInfo> additionalTrackInfos;
-        
+        private TimeSpan lastTrackStopTime;
+
 
         private IntPtr mainWndHandle;
 
@@ -324,6 +341,7 @@ namespace NewSongsProject.ViewModels
         private Timer tmrOpenedTrack;
         private Timer tmrFocus;
         private int tmrFocusCounter;
+        private System.Timers.Timer tmrSet;
 
         private Timer tmrPlayStatusChecker;
         private RECT oldHUDRect, newHUDRect;
@@ -344,12 +362,13 @@ namespace NewSongsProject.ViewModels
         public RelayCommand RemoveSymbolSearchCmd { get; set; }
         public RelayCommand ClearSearchCmd { get; set; }
         public RelayCommand PlayStopCmd { get; set; }
+        public RelayCommand AlterPerformanceModeCmd { get; set; }
         public RelayCommand ShowTrackPropertiesCmd { get; set; }
         public RelayCommand ShowAppSettingsCmd { get; set; }
         public RelayCommand AlterCategoryFilterCmd { get; set; }
         public RelayCommand AlterVocalsFilterCmd { get; set; }
-        public RelayCommand AddTrackToPlaylistCmd { get; set; }
 
+        public RelayCommand AddTrackToPlaylistCmd { get; set; }
         public RelayCommand MovePlaylistItemUpCmd { get; set; }
         public RelayCommand MovePlaylistItemDownCmd { get; set; }
         public RelayCommand RemovePlaylistItemCmd { get; set; }
@@ -360,6 +379,7 @@ namespace NewSongsProject.ViewModels
         public RelayCommand SelectPlayListItemByPathCmd { get; set; }
         public RelayCommand SelectPrevPlaylistItemCmd { get; set; }
         public RelayCommand SelectNextPlaylistItemCmd { get; set; }
+        public RelayCommand SelectCurrentPlaylistItemCmd { get; set; }
         public RelayCommand ProcessPlaylistItemCmd { get; set; }
         public RelayCommand AlterTracksColoredStateCmd { get; set; }
 
@@ -406,6 +426,7 @@ namespace NewSongsProject.ViewModels
             ClearSearchCmd = new RelayCommand(_ => ClearSearch());
             PlayStopCmd = new RelayCommand(_ => PlayStop());
             ShowTrackPropertiesCmd = new RelayCommand(_ => EditTrackProperties(), _ => SelectedTrackListItem != null && SelectedTrackListItem.IsDirectory == false);
+            AlterPerformanceModeCmd = new RelayCommand(_ => PerformanceMode = !PerformanceMode);
             ShowAppSettingsCmd = new RelayCommand(_ => ShowAppSettings(), _ => PerformanceMode == false);
             AlterCategoryFilterCmd = new RelayCommand((ind) => AlterCategoryFilter(int.Parse((string)ind)));
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
@@ -422,6 +443,7 @@ namespace NewSongsProject.ViewModels
             SelectPlayListItemByPathCmd = new RelayCommand((path) => SelectPlaylistItem((string)path));
             SelectNextPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) + 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != Playlist.Count-1);
             SelectPrevPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) - 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != 0);
+            SelectCurrentPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(SelectedPlaylistItem.FullPath), _ => _selectedPlaylistItem != null);
             ProcessPlaylistItemCmd = new RelayCommand(_ => { SelectPlaylistItem(SelectedPlaylistItem.FullPath); ProcessTrackListItem(); }, _ => SelectedPlaylistItem != null);
 
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
@@ -433,7 +455,16 @@ namespace NewSongsProject.ViewModels
             dirWatcher.Deleted += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
             dirWatcher.Renamed += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
             dirWatcher.EnableRaisingEvents = true;
-
+            tmrSet = new System.Timers.Timer(1000);
+            tmrSet.Elapsed += (s, e) => 
+            { 
+                SetTime = SetTime.Add(new TimeSpan(0, 0, 1)); 
+                if (SetTime - lastTrackStopTime > new TimeSpan(0, 1, 0) && !IsPlaying) 
+                { 
+                    tmrSet.Stop(); 
+                    SetTime = TimeSpan.Zero; 
+                } 
+            };
             ChangeDirectory(currentPath);
         }
 
@@ -908,8 +939,6 @@ namespace NewSongsProject.ViewModels
         {
             try
             {
-                Stopwatch tmr = new Stopwatch();
-                tmr.Start();
                 if (allTracksList != null)
                 {
                     var catFilterIndices = CategoriesFilter.FilteredList;
@@ -920,8 +949,6 @@ namespace NewSongsProject.ViewModels
                     if (!string.IsNullOrEmpty(pathItemToSelect))
                         SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == pathItemToSelect);
                 }
-                tmr.Stop();
-                Debug.WriteLine(tmr.ElapsedMilliseconds);
             }
             catch
             {
@@ -989,6 +1016,15 @@ namespace NewSongsProject.ViewModels
 
         private void PlayStop()
         {
+            if (IsPlaying && PerformanceMode)
+            {
+                lastTrackStopTime = SetTime;
+            }
+            if (!tmrSet.Enabled && PerformanceMode)
+            {
+                tmrSet.Start();
+            }
+
             var wndHandle = FindWindow("Cakewalk Core", null);
             if (wndHandle == IntPtr.Zero)
                 return;

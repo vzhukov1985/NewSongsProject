@@ -62,6 +62,14 @@ namespace NewSongsProject.Views
                             dc.SelectNextPlaylistItemCmd.Execute(null);
                         }
                     }
+                    else if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+                    {
+                        var dc = ((MainWindowVM)DataContext);
+                        if (dc.MovePlaylistItemDownCmd.CanExecute(null))
+                        {
+                            dc.MovePlaylistItemDownCmd.Execute(null);
+                        }
+                    }
                     else
                     {
                         if (!list.Items.MoveCurrentToNext())
@@ -81,6 +89,14 @@ namespace NewSongsProject.Views
                             dc.SelectPrevPlaylistItemCmd.Execute(null);
                         }
                     }
+                    else if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
+                    {
+                        var dc = ((MainWindowVM)DataContext);
+                        if (dc.MovePlaylistItemUpCmd.CanExecute(null))
+                        {
+                            dc.MovePlaylistItemUpCmd.Execute(null);
+                        }
+                    }
                     else
                     {
                         if (!list.Items.MoveCurrentToPrevious())
@@ -89,6 +105,19 @@ namespace NewSongsProject.Views
                         }
                     }
                     e.Handled = true;
+                    break;
+
+                case Key.Left:
+                case Key.Right:
+                    if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                    {
+                        var dc = ((MainWindowVM)DataContext);
+                        if (dc.SelectCurrentPlaylistItemCmd.CanExecute(null))
+                        {
+                            dc.SelectCurrentPlaylistItemCmd.Execute(null);
+                        }
+                        e.Handled = true;
+                    }
                     break;
 
                 case Key.Space:
@@ -139,6 +168,7 @@ namespace NewSongsProject.Views
                         item.Focus();
                     }
                 }
+                list.ScrollIntoView(list.SelectedItem);
             }
         }
 
@@ -319,6 +349,15 @@ namespace NewSongsProject.Views
             else
             {
                 MainGrid.Margin = new Thickness(0);
+            }
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender != null)
+            {
+                var list = (ListView)sender;
+                list.ScrollIntoView(list.SelectedItem);
             }
         }
     }
