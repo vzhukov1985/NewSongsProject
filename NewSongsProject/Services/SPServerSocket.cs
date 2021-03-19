@@ -19,22 +19,22 @@ namespace NewSongsProject.Services
 
         public SPServerSocket(int port)
         {
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("192.168.1.3"), port);
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
             activeClients = new List<SPClient>();
 
-            try
-            {
+            /*try
+            {*/
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
                 socket.Bind(endPoint);
                 socket.Listen(10);
 
                 ReceiveCommands();
-            }
+/*            }
             catch
             {
                 return;
-            }
+            }*/
         }
 
         private async void ReceiveCommands()
