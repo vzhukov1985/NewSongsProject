@@ -132,7 +132,7 @@
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\SPRemote\SPRemote.csproj">
-      <Project>{EECB6318-257A-4A56-95FD-1DFD69375D75}</Project>
+      <Project>{60C4D2B9-39D8-4E62-9421-33AEFFD0ED85}</Project>
       <Name>SPRemote</Name>
     </ProjectReference>
   </ItemGroup>
