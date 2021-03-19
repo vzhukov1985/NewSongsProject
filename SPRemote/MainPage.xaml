@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:SPRemote.Converters"
+             xmlns:vm="clr-namespace:SPRemote.ViewModels"
+             x:Class="SPRemote.MainPage">
+    <ContentPage.Resources>
+        <conv:BoolToColorConverter x:Key="BoolToColorConverter"/>
+    </ContentPage.Resources>
+
+    <ContentPage.BindingContext>
+        <vm:MainPageVM/>
+    </ContentPage.BindingContext>
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Row="0"
+              Grid.Column="0">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <SearchBar Grid.Row="0"
+                       Text="{Binding SearchString}"/>
+
+            <Frame Grid.Row="1"
+                   HasShadow="False"
+                   BorderColor="LightGray"
+                   Padding="2">
+                <ListView ItemsSource="{Binding ShownTracks}"
+                          SelectedItem="{Binding SelectedTrack}"/>
+            </Frame>
+
+        </Grid>
+
+        <Grid Grid.Row="0"
+              Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition />
+                <RowDefinition Height="35"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0"
+                   HorizontalTextAlignment="Center"
+                   Text="Текущая песня:"/>
+
+            <Button Grid.Row="1"
+                    BackgroundColor="#009900"
+                    HeightRequest="80"
+                    Margin="50,0,50,0"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    FontSize="Large"
+                    Text="{Binding OpenedTrack}"/>
+
+            <Label Grid.Row="2"
+                   Margin="0,30,0,0"
+                   HorizontalTextAlignment="Center"
+                   Text="Следующая песня:"/>
+
+            <Button Grid.Row="3"
+                    BackgroundColor="#990000"
+                    HeightRequest="80"
+                    Margin="50,0,50,0"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    FontSize="Large"
+                    Text="qwe"/>
+
+            <Label Grid.Row="4"
+                   Margin="0,30,0,0"
+                   HorizontalTextAlignment="Center"
+                   Text="Плейлист:"/>
+
+            <Frame Grid.Row="5"
+                   HasShadow="False"
+                   Margin="50,0,50,10"
+                   Padding="2"
+                   BorderColor="LightGray">
+                <ListView />
+            </Frame>
+
+            <Grid Grid.Row="6"
+                  Margin="50,0,50,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Ellipse Grid.Column="0"
+                         WidthRequest="35"
+                         Stroke="LightGray"
+                         Fill="{Binding IsConnected, Converter={StaticResource BoolToColorConverter}}"/>
+
+                <Label Grid.Column="1"
+                       VerticalTextAlignment="Center"
+                       Text="IP:"/>
+                <Entry Grid.Column="2"
+                       HeightRequest="80"
+                       WidthRequest="150"
+                       Text="{Binding IP}"/>
+                <CheckBox Grid.Column="3"
+                          Margin="0"/>
+                <Label Grid.Column="3"
+                       Margin="30,0,0,0"
+                       VerticalTextAlignment="Center"
+                       Text="Не сохранять изменения"/>
+            </Grid>                     
+        </Grid>
+    </Grid>
+
+</ContentPage>
