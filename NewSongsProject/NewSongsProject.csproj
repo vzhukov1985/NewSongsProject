@@ -101,8 +101,10 @@
     <Compile Include="Converters\IsPlayingToColorConverter.cs" />
     <Compile Include="Converters\OneIndexConverter.cs" />
     <Compile Include="Converters\TrackCategoryToColorConverter.cs" />
+    <Compile Include="Models\SPClient.cs" />
     <Compile Include="Models\TrackCategory.cs" />
     <Compile Include="Models\TrackFilter.cs" />
+    <Compile Include="Services\SPServerSocket.cs" />
     <Compile Include="Services\Wrapper.cs" />
     <Compile Include="UserControls\Spinner.xaml.cs">
       <DependentUpon>Spinner.xaml</DependentUpon>

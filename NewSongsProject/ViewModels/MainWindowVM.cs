@@ -352,6 +352,8 @@ namespace NewSongsProject.ViewModels
 
         private SemaphoreSlim searchSmph;
 
+        private SPServerSocket serverSocket;
+
 
         public RelayCommand SelectFirstTrackCmd { get; set; }
         public RelayCommand SelectLastTrackCmd { get; set; }
@@ -465,6 +467,9 @@ namespace NewSongsProject.ViewModels
                     SetTime = TimeSpan.Zero; 
                 } 
             };
+
+            serverSocket = new SPServerSocket(55555);
+
             ChangeDirectory(currentPath);
         }
 
