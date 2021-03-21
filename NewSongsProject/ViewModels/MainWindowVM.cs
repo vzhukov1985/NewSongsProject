@@ -1,4 +1,5 @@
-﻿using NewSongsProject.Models;
+﻿using EzSockets;
+using NewSongsProject.Models;
 using NewSongsProject.Services;
 using NewSongsProject.Views;
 using Newtonsoft.Json;
@@ -468,6 +469,7 @@ namespace NewSongsProject.ViewModels
                 } 
             };
 
+            //serverSocket = new SPServerSocket(55555);
             serverSocket = new SPServerSocket(55555);
 
             ChangeDirectory(currentPath);
@@ -976,7 +978,7 @@ namespace NewSongsProject.ViewModels
             }
             else
             {
-                currentPath = "D:\\";
+                currentPath = "C:\\";
             }
             MainWindowX = appSettings.MainWindowX;
             MainWindowY = appSettings.MainWindowY;

@@ -20,4 +20,7 @@
     <Folder Include="Extensions\" />
     <Folder Include="Sevices\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
 </Project>

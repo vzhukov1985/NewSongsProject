@@ -62,9 +62,12 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EzSockets, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\EzSockets.1.0.1\lib\netstandard2.0\EzSockets.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.31\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
     </Reference>
@@ -104,7 +107,7 @@
     <Compile Include="Models\SPClient.cs" />
     <Compile Include="Models\TrackCategory.cs" />
     <Compile Include="Models\TrackFilter.cs" />
-    <Compile Include="Services\SPServerSocket.cs" />
+    <Compile Include="Services\SPEZServerSocket.cs" />
     <Compile Include="Services\Wrapper.cs" />
     <Compile Include="UserControls\Spinner.xaml.cs">
       <DependentUpon>Spinner.xaml</DependentUpon>

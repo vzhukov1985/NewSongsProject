@@ -9,9 +9,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
-using SPRemote.Sevices;
 using Xamarin.Essentials;
 using Xamarin.Forms.Internals;
+using Common.Models;
 
 namespace SPRemote.ViewModels
 {
@@ -98,7 +98,7 @@ namespace SPRemote.ViewModels
 
 
 
-        private SPRemoteControl socket;
+        private SPClientSocket socket;
 
         private Timer connectionChecker;
         private List<string> allTracks;
@@ -107,7 +107,7 @@ namespace SPRemote.ViewModels
         {
             ShownTracks = new List<string>();
             IP = Preferences.Get("IP", "192.168.1.1");
-            socket = new SPRemoteControl(IP, 55555);
+            socket = new SPClientSocket(IP, 55555);
             socket.OnMessageReceived += OnMessageReceived;
             socket.OnConnected += OnConnected;
             socket.StartReceiving();

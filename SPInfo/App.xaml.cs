@@ -1,4 +1,5 @@
 ﻿using System;
+using SPInfo.ViewModels;
 using SPInfo.Views;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -20,6 +21,7 @@ namespace SPInfo
 
         protected override void OnSleep()
         {
+
         }
 
         protected override void OnResume()

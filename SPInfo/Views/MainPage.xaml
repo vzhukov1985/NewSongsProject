@@ -1,24 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:SPInfo.Converters"
+             xmlns:vm="clr-namespace:SPInfo.ViewModels"
              x:Class="SPInfo.Views.MainPage">
 
-    <Grid>
-       <Grid.RowDefinitions>
-           <RowDefinition/>
-           <RowDefinition/>
-           <RowDefinition/>
-           <RowDefinition/>
-        </Grid.RowDefinitions>
+    <ContentPage.Resources>
+        <conv:IsConnectedToColorConverter x:Key="IsConnectedToColorConverter"/>
+        <conv:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </ContentPage.Resources>
 
-        <Label Grid.Row="0"
+    <ContentPage.BindingContext>
+        <vm:MainPageVM/>
+    </ContentPage.BindingContext>
+
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0"
                FontSize="15"
                HorizontalTextAlignment="Center"
                Margin="0,40,0,30"
                Text="Текущая песня:"/>
-        <Label Grid.Row="1"
+            <Label Grid.Row="1"
                HorizontalTextAlignment="Center"
                Text="Bailando"/>
+        </Grid>
+        <BoxView Style="{StaticResource BlockBoxView}" IsVisible="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"/>
+        <ActivityIndicator IsVisible="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"/>
     </Grid>
-
 </ContentPage>
