@@ -26,6 +26,7 @@
     <Folder Include="Resources\" />
     <Folder Include="Services\" />
     <Folder Include="Models\" />
+    <Folder Include="UserControls\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />

@@ -13,6 +13,12 @@ namespace SPInfo.ViewModels
             set
             {
                 settings.IP = value;
+
+                if (initialIP == null)
+                    initialIP = value;
+
+                IsIPChanged = value != initialIP;
+
                 OnPropertyChanged("IP");
             }
         }
@@ -37,12 +43,17 @@ namespace SPInfo.ViewModels
             }
         }
 
+        public bool IsIPChanged { get; set; }
+
         private ISettings settings;
+        private string initialIP = null;
+         
 
         public Command GoBack { get; set; }
 
         public SettingsPageVM()
         {
+            IsIPChanged = false;
             settings = DependencyService.Resolve<ISettings>();
 
             GoBack = new Command(_ => PageService.GoBack());

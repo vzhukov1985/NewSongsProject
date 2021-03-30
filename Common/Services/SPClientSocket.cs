@@ -64,6 +64,16 @@ namespace Common.Services
             });
         }
 
+        public async Task Disconnect()
+        {
+            await Task.Run(() =>
+            {
+                connCheckTimer.Stop();
+                socket.StopReadingMessages();
+                socket.Close();                
+            });
+        }
+
         private void ConnectionCheck(object sender, ElapsedEventArgs e)
         {
             if (!socket.Connected && !connecting)

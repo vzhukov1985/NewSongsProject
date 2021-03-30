@@ -8,6 +8,7 @@ using Xamarin.Forms;
 using SPInfo.Services;
 using SPInfo.Models;
 using System.Net;
+using Xamarin.Essentials;
 
 namespace SPInfo.ViewModels
 {
@@ -88,24 +89,32 @@ namespace SPInfo.ViewModels
         public MainPageVM()
         {
             settings = DependencyService.Resolve<ISettings>();
+            DeviceDisplay.KeepScreenOn = true;
 
             ShowSettingsCmd = new Command(_ => ShowSettings());
 
-            Connect();
+            ConnectAsync();
         }
 
-        private void ShowSettings()
+        private async void ShowSettings()
         {
-            PageService.GoToSettingsPage();
+            if (await PageService.GoToSettingsPage())
+            {
+                ConnectAsync();
+            }
+
             CurrentTrack = RecreateTrackName(currentTrackInfo);
             NextTrack = RecreateTrackName(nextTrackInfo);
         }
 
-        private void Connect()
+        private async void ConnectAsync()
         {
             IPAddress ipCheck;
             if (!IPAddress.TryParse(settings.IP, out ipCheck))
                 return;
+
+            if (socket != null && socket.Connected)
+                await socket.Disconnect();
 
             socket = new SPClientSocket(settings.IP, 55555);
             socket.Connect();
@@ -165,8 +174,11 @@ namespace SPInfo.ViewModels
 
         private string RecreateTrackName(TrackListItem track)
         {
+            if (track == null)
+                return "Нет";
+
             string result;
-            if (settings.ShowFullTrackName)
+            if (settings.ShowFullTrackName && !string.IsNullOrEmpty(track.FullName))
             {
                 result = track.FullName;
             }
@@ -174,10 +186,12 @@ namespace SPInfo.ViewModels
             {
                 result = track.Caption;
             }
+
             if (settings.ShowTrackKey && !string.IsNullOrEmpty(track.Key))
             {
                 result += $" ({track.Key})";
             }
+
             return result;
         }
     }
