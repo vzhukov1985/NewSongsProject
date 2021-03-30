@@ -107,7 +107,7 @@
     <Compile Include="Models\SPClient.cs" />
     <Compile Include="Models\TrackCategory.cs" />
     <Compile Include="Models\TrackFilter.cs" />
-    <Compile Include="Services\SPEZServerSocket.cs" />
+    <Compile Include="Services\SPServerSocket.cs" />
     <Compile Include="Services\Wrapper.cs" />
     <Compile Include="UserControls\Spinner.xaml.cs">
       <DependentUpon>Spinner.xaml</DependentUpon>
@@ -145,7 +145,6 @@
     <Compile Include="Converters\ItemTypeToFontConverter.cs" />
     <Compile Include="Models\AdditionalTrackInfo.cs" />
     <Compile Include="Models\AppSettings.cs" />
-    <Compile Include="Models\TrackListItem.cs" />
     <Compile Include="Services\DialogService.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\MainWindowVM.cs" />
@@ -200,6 +199,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="!Info\Kebd Commands.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{319de5e3-9daa-4035-a0a2-8bdcb9f7b798}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

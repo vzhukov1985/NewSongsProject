@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:conv="clr-namespace:SPInfo.Converters"
              xmlns:vm="clr-namespace:SPInfo.ViewModels"
-             x:Class="SPInfo.Views.MainPage">
+             x:Class="SPInfo.Views.MainPage"
+             NavigationPage.HasNavigationBar="False">
 
     <ContentPage.Resources>
         <conv:IsConnectedToColorConverter x:Key="IsConnectedToColorConverter"/>
@@ -17,22 +18,55 @@
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
                 <RowDefinition/>
+                <RowDefinition Height="30"/>
                 <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
+                <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
             <Label Grid.Row="0"
-               FontSize="15"
-               HorizontalTextAlignment="Center"
-               Margin="0,40,0,30"
-               Text="Текущая песня:"/>
+                   FontSize="20"
+                   HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="End"
+                   Text="Текущая песня:"/>
+
             <Label Grid.Row="1"
-               HorizontalTextAlignment="Center"
-               Text="Bailando"/>
+                   HorizontalTextAlignment="Center"
+                   FontSize="54"
+                   FontAttributes="Bold"
+                   LineBreakMode="CharacterWrap"
+                   TextColor="Red"
+                   Text="{Binding CurrentTrack}"/>
+
+            <Label Grid.Row="2"
+                   HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="End"
+                   FontSize="20"
+                   Text="Следующая песня:"/>
+
+            <Label Grid.Row="3"
+                   HorizontalTextAlignment="Center"
+                   FontSize="54"
+                   FontAttributes="Bold"
+                   LineBreakMode="CharacterWrap"
+                   Text="{Binding NextTrack}"/>
+
+            <Label Grid.Row="4"
+                   HorizontalTextAlignment="Center"
+                   FontSize="20"
+                   Text="{Binding SetTime, StringFormat='Время с начала сета: {0}'}"/>
+
+            <Grid.GestureRecognizers>
+                <SwipeGestureRecognizer Direction="Left" Command="{Binding ShowSettingsCmd}"/>
+            </Grid.GestureRecognizers>
         </Grid>
+
         <BoxView Style="{StaticResource BlockBoxView}" IsVisible="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"/>
-        <ActivityIndicator IsVisible="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"/>
+        <ActivityIndicator IsVisible="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}">
+            <ActivityIndicator.GestureRecognizers>
+                <SwipeGestureRecognizer Direction="Left" Command="{Binding ShowSettingsCmd}"/>
+            </ActivityIndicator.GestureRecognizers>
+        </ActivityIndicator>
     </Grid>
 </ContentPage>

@@ -10,6 +10,13 @@ namespace Common.Services
 
     public class SPClientSocket
     {
+        public delegate void MessageReceivedHandler(string header, string data);
+        public delegate void ConnectedHandler();
+
+        public event MessageReceivedHandler OnMessageReceived;
+        public event ConnectedHandler OnConnected;    
+
+
         public bool Connected { get; set; }
         public string IP { get; set; }
         public int Port { get; set; }
@@ -26,7 +33,7 @@ namespace Common.Services
             IP = ip;
             Port = port;
             connCheckTimer = new Timer(100);
-            connCheckTimer.Elapsed += connCheck;
+            connCheckTimer.Elapsed += ConnectionCheck;
             connCheckTimer.Start();
         }
 
@@ -41,8 +48,9 @@ namespace Common.Services
 
                     socket = new EzSocket(IP, Port, new EzEventsListener()
                     {
-                        OnMessageReadHandler = OnMessageReceived,
-                        OnConnectionClosedHandler = OnConnectionClosed
+                        OnMessageReadHandler = OnSocketMessageReceived,
+                        OnNewConnectionHandler = OnSocketConnected,
+                        OnConnectionClosedHandler = OnSocketConnectionClosed
                     });
 
                     if (socket.Connected)
@@ -56,7 +64,7 @@ namespace Common.Services
             });
         }
 
-        public void connCheck(object sender, ElapsedEventArgs e)
+        private void ConnectionCheck(object sender, ElapsedEventArgs e)
         {
             if (!socket.Connected && !connecting)
             {
@@ -64,12 +72,28 @@ namespace Common.Services
             }
         }
 
-        private void OnMessageReceived(EzSocket socket, byte[] data)
+        public void SendMessage(string header, string data = "")
         {
-            Connected = true;
+            socket.SendMessageAsync(header + '|' + data);
         }
 
-        private void OnConnectionClosed(EzSocket socket)
+        private void OnSocketMessageReceived(EzSocket socket, byte[] data)
+        {
+            Connected = true;
+
+            string msg = Encoding.UTF8.GetString(data);
+            string strHeader = msg.Substring(0, msg.IndexOf('|'));
+            string strData = msg.Substring(msg.IndexOf('|') + 1);
+
+            OnMessageReceived?.Invoke(strHeader, strData);
+        }
+
+        private void OnSocketConnected(EzSocket socket)
+        {
+            OnConnected?.Invoke();
+        }
+
+        private void OnSocketConnectionClosed(EzSocket socket)
         {
             Connected = false;
         }

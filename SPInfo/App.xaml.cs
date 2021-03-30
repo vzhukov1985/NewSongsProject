@@ -1,4 +1,5 @@
 ﻿using System;
+using SPInfo.Models;
 using SPInfo.ViewModels;
 using SPInfo.Views;
 using Xamarin.Forms;
@@ -11,8 +12,9 @@ namespace SPInfo
         public App()
         {
             InitializeComponent();
+            DependencyService.RegisterSingleton<ISettings>(new Settings());
 
-            MainPage = new MainPage();
+            MainPage = new NavigationPage(new MainPage());
         }
 
         protected override void OnStart()

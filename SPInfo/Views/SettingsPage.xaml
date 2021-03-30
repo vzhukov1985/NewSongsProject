@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:SPInfo.ViewModels"
+    x:Class="SPInfo.Views.SettingsPage"
+    NavigationPage.HasNavigationBar="False">
+
+    <ContentPage.BindingContext>
+        <vm:SettingsPageVM/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Content>
+        <TableView Intent="Settings">
+            <TableRoot>
+                <TableSection Title="Подключение">
+                    <EntryCell Keyboard="Url"
+                               Label="IP-адрес сервера:"
+                               Text="{Binding IP}"/>
+                </TableSection>
+                <TableSection Title="Внешний вид">
+                    <SwitchCell Text="Показывать полное название трека"
+                                On="{Binding ShowFullTrackName}"/>
+                    <SwitchCell Text="Показывать тональность"
+                                On="{Binding ShowKey}"/>
+                </TableSection>
+            </TableRoot>
+
+            <TableView.GestureRecognizers>
+                <SwipeGestureRecognizer Direction="Right" Command="{Binding GoBack}"/>
+            </TableView.GestureRecognizers>
+        </TableView>
+    
+    </ContentPage.Content>
+
+    
+
+</ContentPage>

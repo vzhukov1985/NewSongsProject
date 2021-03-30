@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,12 +27,5 @@ namespace NewSongsProject.Models
             Tempo = 0;
             VocalType = VocalType.Male;
         }
-    }
-
-    public enum VocalType
-    {
-        Male,
-        Female,
-        Duet
     }
 }

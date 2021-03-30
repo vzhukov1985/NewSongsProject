@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Common.Models;
 
 namespace NewSongsProject.ViewModels
 {
@@ -87,6 +88,7 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _selectedTrackListItem = value;
+                SendNextTrackToSPInfo();
                 OnPropertyChanged("SelectedTrackListItem");
             }
         }
@@ -132,6 +134,7 @@ namespace NewSongsProject.ViewModels
                 if (_openedTrack == null || !_openedTrack.Equals(value))
                 {
                     _openedTrack = value;
+                    SendCurrentTrackToSPInfo(value);
 
                     OnPropertyChanged("OpenedTrack");
                 }
@@ -270,11 +273,12 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _setTime = value;
+                SendSetTimeToSPInfo(value);
                 OnPropertyChanged("SetTime");
             }
         }
 
-        
+
 
 
 
@@ -353,7 +357,7 @@ namespace NewSongsProject.ViewModels
 
         private SemaphoreSlim searchSmph;
 
-        private SPServerSocket serverSocket;
+        private SPServerSocket spInfoSocket;
 
 
         public RelayCommand SelectFirstTrackCmd { get; set; }
@@ -444,7 +448,7 @@ namespace NewSongsProject.ViewModels
             SavePlaylistCmd = new RelayCommand(_ => SavePlaylist(), _ => Playlist.Count > 0);
 
             SelectPlayListItemByPathCmd = new RelayCommand((path) => SelectPlaylistItem((string)path));
-            SelectNextPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) + 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != Playlist.Count-1);
+            SelectNextPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) + 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != Playlist.Count - 1);
             SelectPrevPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(Playlist.IndexOf(SelectedPlaylistItem) - 1), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) != 0);
             SelectCurrentPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(SelectedPlaylistItem.FullPath), _ => _selectedPlaylistItem != null);
             ProcessPlaylistItemCmd = new RelayCommand(_ => { SelectPlaylistItem(SelectedPlaylistItem.FullPath); ProcessTrackListItem(); }, _ => SelectedPlaylistItem != null);
@@ -459,20 +463,95 @@ namespace NewSongsProject.ViewModels
             dirWatcher.Renamed += (s, e) => { dirWatcher.EnableRaisingEvents = false; DirContentsChanged(e.FullPath); };
             dirWatcher.EnableRaisingEvents = true;
             tmrSet = new System.Timers.Timer(1000);
-            tmrSet.Elapsed += (s, e) => 
-            { 
-                SetTime = SetTime.Add(new TimeSpan(0, 0, 1)); 
-                if (SetTime - lastTrackStopTime > new TimeSpan(0, 1, 0) && !IsPlaying) 
-                { 
-                    tmrSet.Stop(); 
-                    SetTime = TimeSpan.Zero; 
-                } 
+            tmrSet.Elapsed += (s, e) =>
+            {
+                SetTime = SetTime.Add(new TimeSpan(0, 0, 1));
+                if (SetTime - lastTrackStopTime > new TimeSpan(0, 1, 0) && !IsPlaying)
+                {
+                    tmrSet.Stop();
+                    SetTime = TimeSpan.Zero;
+                }
             };
 
-            //serverSocket = new SPServerSocket(55555);
-            serverSocket = new SPServerSocket(55555);
+            spInfoSocket = new SPServerSocket(55555);
+            spInfoSocket.OnMessageReceived += OnSPInfoMessageReceived;
 
             ChangeDirectory(currentPath);
+        }
+
+        private void SendSetTimeToSPInfo(TimeSpan setTime, EzSocket socket = null)
+        {
+            if (socket == null)
+            {
+                spInfoSocket.BroadcastMessage("SetTime", setTime.ToString());
+            }
+            else
+            {
+                spInfoSocket.SendMessageToClient(socket, "SetTime", setTime.ToString());
+            }
+        }
+
+        private void SendCurrentTrackToSPInfo(string trackCaption, EzSocket socket = null)
+        {
+            if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
+            {
+                TrackListItem curTrack = null;
+                curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
+
+                if (curTrack == null)
+                {
+                    curTrack = new TrackListItem()
+                    {
+                        Caption = "Нет",
+                        Category = 0,
+                        FullName = "Нет",
+                        FullPath = "Нет",
+                        IsDirectory = false,
+                        IsLounge = false,
+                        Key = "",
+                        Tags = new List<string>(),
+                        Tempo = 0,
+                        TimesOpened = 0,
+                        VocalType = VocalType.Duet
+                    };
+                }
+                if (socket == null)
+                {
+                    spInfoSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                }
+                else
+                {
+                    spInfoSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                }
+            }
+        }
+
+        private void SendNextTrackToSPInfo(EzSocket socket = null)
+        {
+            if (SelectedTrackListItem != null)
+            {
+                if (socket == null)
+                {
+                    spInfoSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                }
+                else
+                {
+                    spInfoSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                }
+            }
+        }
+
+        private void OnSPInfoMessageReceived(EzSocket socket, string header, string data)
+        {
+            switch (header)
+            {
+                case "ClientConnected":
+                    SendCurrentTrackToSPInfo(OpenedTrack, socket);
+                    SendNextTrackToSPInfo(socket);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void ClearSearch()
@@ -500,9 +579,9 @@ namespace NewSongsProject.ViewModels
             var itemDir = Path.GetDirectoryName(path);
             if (itemDir != currentPath)
                 ChangeDirectory(itemDir);
-            
+
             SelectedPlaylistItem = Playlist.FirstOrDefault(t => t.FullPath == path);
-            
+
             if (string.IsNullOrEmpty(SearchText))
             {
                 SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == path);
@@ -526,7 +605,7 @@ namespace NewSongsProject.ViewModels
             var itemDir = Path.GetDirectoryName(Playlist[index].FullPath);
             if (itemDir != currentPath)
                 ChangeDirectory(itemDir);
-            
+
             SelectedPlaylistItem = Playlist[index];
 
             if (string.IsNullOrEmpty(SearchText))
@@ -854,18 +933,20 @@ namespace NewSongsProject.ViewModels
                     OpenCwpProject(SelectedTrackListItem.FullPath);
                 }
             }
-
-            var SelectedItemFullPath = SelectedTrackListItem.FullPath;
-            SearchText = "";
-            ProcessSearch();
-            var plIdx = Playlist.FindIndex(t => t.FullPath == SelectedItemFullPath);
-            if (plIdx == -1 || plIdx == Playlist.Count-1)
+            if (SelectedPlaylistItem != null)
             {
-                SelectedTrackListItem = allTracksList.Where(t => t.FullPath == SelectedItemFullPath).FirstOrDefault();
-            }
-            else
-            {
-                SelectPlaylistItem(plIdx + 1);
+                var SelectedItemFullPath = SelectedTrackListItem.FullPath;
+                SearchText = "";
+                ProcessSearch();
+                var plIdx = Playlist.FindIndex(t => t.FullPath == SelectedItemFullPath);
+                if (plIdx == -1 || plIdx == Playlist.Count - 1)
+                {
+                    SelectedTrackListItem = allTracksList.Where(t => t.FullPath == SelectedItemFullPath).FirstOrDefault();
+                }
+                else
+                {
+                    SelectPlaylistItem(plIdx + 1);
+                }
             }
         }
 
