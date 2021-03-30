@@ -834,7 +834,7 @@ namespace NewSongsProject.ViewModels
 
             try
             {
-                OpenedTrack = fullCaption.Substring(fullCaption.IndexOf('[') + 1, fullCaption.IndexOf(" - Track") - 1 - fullCaption.IndexOf('['));
+                OpenedTrack = Path.GetFileNameWithoutExtension(fullCaption.Substring(fullCaption.IndexOf('[') + 1, fullCaption.IndexOf(" - Track") - 1 - fullCaption.IndexOf('[')));
             }
             catch
             {
