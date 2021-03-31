@@ -62,7 +62,8 @@
 
         <KeyBinding Key="Tab" Command="{Binding ShowTrackPropertiesCmd}"/>
         <KeyBinding Key="F5" Command="{Binding AlterTracksColoredStateCmd}"/>
-        <KeyBinding Key="F12" Command="{Binding AlterPerformanceModeCmd}"/>
+        <KeyBinding Key="F6" Command="{Binding AlterPerformanceModeCmd}"/>
+        <KeyBinding Key="F12" Command="{Binding SendTrackListToSPInfoCmd}"/>
 
         <KeyBinding Key="NumPad0" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="0"/>
         <KeyBinding Key="NumPad1" Command="{Binding AlterCategoryFilterCmd}" CommandParameter="1"/>

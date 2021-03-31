@@ -21,6 +21,8 @@ namespace NewSongsProject.Services
 
         public SPServerSocket(int port)
         {
+            EzSocket.MaxMessageSize = int.MaxValue;
+
             socket = new EzSocketListener(new EzEventsListener()
             {
                 OnNewConnectionHandler = OnNewConnectionHandler,

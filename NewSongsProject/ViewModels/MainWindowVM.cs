@@ -359,6 +359,7 @@ namespace NewSongsProject.ViewModels
 
         private SPServerSocket spInfoSocket;
 
+        private DateTime lastSPInfoSendTrackListTime = DateTime.Now;
 
         public RelayCommand SelectFirstTrackCmd { get; set; }
         public RelayCommand SelectLastTrackCmd { get; set; }
@@ -389,6 +390,8 @@ namespace NewSongsProject.ViewModels
         public RelayCommand SelectCurrentPlaylistItemCmd { get; set; }
         public RelayCommand ProcessPlaylistItemCmd { get; set; }
         public RelayCommand AlterTracksColoredStateCmd { get; set; }
+
+        public RelayCommand SendTrackListToSPInfoCmd { get; set; }
 
 
         public MainWindowVM()
@@ -453,6 +456,8 @@ namespace NewSongsProject.ViewModels
             SelectCurrentPlaylistItemCmd = new RelayCommand(_ => SelectPlaylistItem(SelectedPlaylistItem.FullPath), _ => _selectedPlaylistItem != null);
             ProcessPlaylistItemCmd = new RelayCommand(_ => { SelectPlaylistItem(SelectedPlaylistItem.FullPath); ProcessTrackListItem(); }, _ => SelectedPlaylistItem != null);
 
+            SendTrackListToSPInfoCmd = new RelayCommand(_ => SendTrackListToSPInfo(), _ => TrackList != null);
+
             tmrOpenedTrack = new Timer(_ => GetOpenedTrackName(), null, 0, 200);
             tmrPlayStatusChecker = new Timer(_ => PlayStatusCheck(), null, 0, 200);
             tmrAlwaysSelectionChecker = new Timer(_ => { if (TrackList != null && TrackList.Count > 0 && SelectedTrackListItem == null) SelectedTrackListItem = TrackList[0]; }, null, 0, 100);
@@ -477,6 +482,15 @@ namespace NewSongsProject.ViewModels
             spInfoSocket.OnMessageReceived += OnSPInfoMessageReceived;
 
             ChangeDirectory(currentPath);
+        }
+
+        private void SendTrackListToSPInfo()
+        {
+            if ((DateTime.Now - lastSPInfoSendTrackListTime).TotalSeconds < 2)
+                return;
+            lastSPInfoSendTrackListTime = DateTime.Now;
+            var trackListToSend = TrackList.Where(t => !t.IsDirectory).ToList();
+            spInfoSocket.BroadcastMessage("TrackList", JsonConvert.SerializeObject(trackListToSend));
         }
 
         private void SendSetTimeToSPInfo(TimeSpan setTime, EzSocket socket = null)
@@ -549,8 +563,36 @@ namespace NewSongsProject.ViewModels
                     SendCurrentTrackToSPInfo(OpenedTrack, socket);
                     SendNextTrackToSPInfo(socket);
                     break;
+                case "SelectTrack":
+                    Application.Current.Dispatcher.Invoke(() => SelectTrackByPath(JsonConvert.DeserializeObject<TrackListItem>(data).FullPath));
+                    break;
                 default:
                     break;
+            }
+        }
+
+        private void SelectTrackByPath(string path)
+        {
+            var itemDir = Path.GetDirectoryName(path);
+            if (itemDir != currentPath)
+                ChangeDirectory(itemDir);
+
+            if (string.IsNullOrEmpty(SearchText))
+            {
+                SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == path);
+            }
+            else
+            {
+                SearchText = "";
+                ProcessSearch(path);
+            }
+
+            if (SelectedTrackListItem == null)
+            {
+                AlterCategoryFilter(-1);
+                AlterVocalsFilter(-1);
+                LoungeFilter = false;
+                SelectTrackByPath(path);
             }
         }
 
@@ -576,28 +618,9 @@ namespace NewSongsProject.ViewModels
 
         private void SelectPlaylistItem(string path)
         {
-            var itemDir = Path.GetDirectoryName(path);
-            if (itemDir != currentPath)
-                ChangeDirectory(itemDir);
-
             SelectedPlaylistItem = Playlist.FirstOrDefault(t => t.FullPath == path);
 
-            if (string.IsNullOrEmpty(SearchText))
-            {
-                SelectedTrackListItem = TrackList.FirstOrDefault(t => t.FullPath == path);
-            }
-            else
-            {
-                SearchText = "";
-                ProcessSearch(path);
-            }
-            if (SelectedTrackListItem == null)
-            {
-                AlterCategoryFilter(-1);
-                AlterVocalsFilter(-1);
-                LoungeFilter = false;
-                SelectPlaylistItem(path);
-            }
+            SelectTrackByPath(path);
         }
 
         private void SelectPlaylistItem(int index)
