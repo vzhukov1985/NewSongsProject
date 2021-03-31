@@ -13,6 +13,7 @@ namespace SPInfo
         {
             InitializeComponent();
             DependencyService.RegisterSingleton<ISettings>(new Settings());
+            DependencyService.RegisterSingleton<IGlobalStates>(new GlobalStates());
 
             MainPage = new NavigationPage(new MainPage());
         }

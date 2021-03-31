@@ -31,6 +31,21 @@ namespace SPInfo.Models
             }
         }
 
+        public bool ReceiveTrackList
+        {
+            get { return Preferences.Get("ReceiveTrackList", "False") == "True" ? true : false; }
+            set
+            {
+                Preferences.Set("ReceiveTrackList", value ? "True" : "False");
+            }
+        }
+
+        public int TrackListShowTime
+        {
+            get => int.Parse(Preferences.Get("TrackListShowTime", "10")); 
+            set => Preferences.Set("TrackListShowTime", value.ToString());            
+        }
+
         public Settings()
         {
         }

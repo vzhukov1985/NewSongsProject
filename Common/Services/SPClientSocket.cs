@@ -30,6 +30,7 @@ namespace Common.Services
 
         public SPClientSocket(string ip, int port)
         {
+            EzSocket.MaxMessageSize = int.MaxValue;
             IP = ip;
             Port = port;
             connCheckTimer = new Timer(100);

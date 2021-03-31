@@ -9,6 +9,7 @@ using SPInfo.Services;
 using SPInfo.Models;
 using System.Net;
 using Xamarin.Essentials;
+using System.Collections.Generic;
 
 namespace SPInfo.ViewModels
 {
@@ -79,16 +80,19 @@ namespace SPInfo.ViewModels
 
         private SPClientSocket socket;
         private Timer tmrConnectionChecker;
-        private ISettings settings;
+        private ISettings _settings;
         private TrackListItem currentTrackInfo;
         private TrackListItem nextTrackInfo;
+        private IGlobalStates _globalStates;
 
         public Command ShowSettingsCmd { get; set; }
 
 
         public MainPageVM()
         {
-            settings = DependencyService.Resolve<ISettings>();
+            _settings = DependencyService.Resolve<ISettings>();
+            _globalStates = DependencyService.Resolve<IGlobalStates>();
+
             DeviceDisplay.KeepScreenOn = true;
 
             ShowSettingsCmd = new Command(_ => ShowSettings());
@@ -110,13 +114,13 @@ namespace SPInfo.ViewModels
         private async void ConnectAsync()
         {
             IPAddress ipCheck;
-            if (!IPAddress.TryParse(settings.IP, out ipCheck))
+            if (!IPAddress.TryParse(_settings.IP, out ipCheck))
                 return;
 
             if (socket != null && socket.Connected)
                 await socket.Disconnect();
 
-            socket = new SPClientSocket(settings.IP, 55555);
+            socket = new SPClientSocket(_settings.IP, 55555);
             socket.Connect();
             socket.OnMessageReceived += OnMessageReceived;
             socket.OnConnected += OnConnected;
@@ -152,7 +156,7 @@ namespace SPInfo.ViewModels
 
         }
 
-        private void OnMessageReceived(string header, string data)
+        private async void OnMessageReceived(string header, string data)
         {
             switch (header)
             {
@@ -167,6 +171,18 @@ namespace SPInfo.ViewModels
                 case "SetTime":
                     SetTime = TimeSpan.Parse(data);
                     break;
+                case "TrackList":
+                    if (_settings.ReceiveTrackList)
+                    {
+                        if (_globalStates.IsTrackListPageShowing)
+                            PageService.GoBack();
+                        _globalStates.IsTrackListPageShowing = true;
+
+                        var selectedTrack = await PageService.ShowTrackListPage(JsonConvert.DeserializeObject<List<TrackListItem>>(data));
+                        if (selectedTrack != null)
+                            socket.SendMessage("SelectTrack", JsonConvert.SerializeObject(selectedTrack));
+                    }
+                    break;
                 default:
                     break;
             }
@@ -178,7 +194,7 @@ namespace SPInfo.ViewModels
                 return "Нет";
 
             string result;
-            if (settings.ShowFullTrackName && !string.IsNullOrEmpty(track.FullName))
+            if (_settings.ShowFullTrackName && !string.IsNullOrEmpty(track.FullName))
             {
                 result = track.FullName;
             }
@@ -187,7 +203,7 @@ namespace SPInfo.ViewModels
                 result = track.Caption;
             }
 
-            if (settings.ShowTrackKey && !string.IsNullOrEmpty(track.Key))
+            if (_settings.ShowTrackKey && !string.IsNullOrEmpty(track.Key))
             {
                 result += $" ({track.Key})";
             }

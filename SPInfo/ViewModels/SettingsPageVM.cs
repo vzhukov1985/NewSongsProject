@@ -9,10 +9,10 @@ namespace SPInfo.ViewModels
     {
         public string IP
         {
-            get { return settings.IP; }
+            get { return _settings.IP; }
             set
             {
-                settings.IP = value;
+                _settings.IP = value;
 
                 if (initialIP == null)
                     initialIP = value;
@@ -25,27 +25,47 @@ namespace SPInfo.ViewModels
 
         public bool ShowFullTrackName
         {
-            get { return settings.ShowFullTrackName; }
+            get { return _settings.ShowFullTrackName; }
             set
             {
-                settings.ShowFullTrackName = value;
+                _settings.ShowFullTrackName = value;
                 OnPropertyChanged("ShowFullTrackName");
             }
         }
 
         public bool ShowKey
         {
-            get { return settings.ShowTrackKey; }
+            get { return _settings.ShowTrackKey; }
             set
             {
-                settings.ShowTrackKey = value;
+                _settings.ShowTrackKey = value;
                 OnPropertyChanged("ShowKey");
+            }
+        }
+
+        public bool ReceiveTrackList
+        {
+            get { return _settings.ReceiveTrackList; }
+            set
+            {
+                _settings.ReceiveTrackList = value;
+                OnPropertyChanged("ReceiveTrackList");
+            }
+        }
+
+        public int TrackListShowTime
+        {
+            get => _settings.TrackListShowTime;
+            set
+            {
+                _settings.TrackListShowTime = value;
+                OnPropertyChanged("TrackListShowTime");
             }
         }
 
         public bool IsIPChanged { get; set; }
 
-        private ISettings settings;
+        private ISettings _settings;
         private string initialIP = null;
          
 
@@ -54,7 +74,7 @@ namespace SPInfo.ViewModels
         public SettingsPageVM()
         {
             IsIPChanged = false;
-            settings = DependencyService.Resolve<ISettings>();
+            _settings = DependencyService.Resolve<ISettings>();
 
             GoBack = new Command(_ => PageService.GoBack());
         }

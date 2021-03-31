@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:SPInfo.ViewModels"
     xmlns:uc="clr-namespace:SPInfo.UserControls"
+    xmlns:sv="clr-namespace:AiForms.Renderers;assembly=SettingsView"
     x:Class="SPInfo.Views.SettingsPage"
     NavigationPage.HasNavigationBar="False">
 
@@ -11,29 +12,47 @@
         <vm:SettingsPageVM/>
     </ContentPage.BindingContext>
 
-    <ContentPage.Content>
-        <TableView Intent="Settings">
-            <TableRoot>
-                <TableSection Title="Подключение">
-                    <EntryCell Keyboard="Url"
-                               Label="IP-адрес сервера:"
-                               Text="{Binding IP}"/>
-                </TableSection>
-                <TableSection Title="Внешний вид">
-                    <SwitchCell Text="Показывать полное название трека"
-                                On="{Binding ShowFullTrackName}"/>
-                    <SwitchCell Text="Показывать тональность"
-                                On="{Binding ShowKey}"/>
-                </TableSection>
-            </TableRoot>
 
-            <TableView.GestureRecognizers>
-                <SwipeGestureRecognizer Direction="Right" Command="{Binding GoBack}"/>
-            </TableView.GestureRecognizers>
-        </TableView>
-    
-    </ContentPage.Content>
+    <sv:SettingsView>
+        <sv:Section>
+            <sv:Section.HeaderView>
+                <Label BackgroundColor="White"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"
+                       HorizontalOptions="FillAndExpand"
+                       FontSize="17"
+                       Padding="0,10,0,10"
+                       Text="Настройки"/>
+            </sv:Section.HeaderView>
+            </sv:Section>
 
-    
+        <sv:Section Title="Подключение">
+            <sv:EntryCell Keyboard="Url"
+                                  Title="IP-адрес сервера:"
+                          ValueTextFontSize="17"
+                                  ValueText="{Binding IP}"/>
+        </sv:Section>
+        <sv:Section Title="Внешний вид">
+            <sv:SwitchCell Title="Показывать полное название трека"
+                                   On="{Binding ShowFullTrackName}"/>
+            <sv:SwitchCell Title="Показывать тональность"
+                                   On="{Binding ShowKey}"/>
+        </sv:Section>
+        <sv:Section Title="Дополнительно">
+            <sv:SwitchCell Title="Получать список песен"
+                                   On="{Binding ReceiveTrackList}"/>
+            <sv:NumberPickerCell Title="Время показа списка песен"
+                                        PickerTitle="Время показа списка песен"
+                                        Min="3"
+                                        Max="20"
+                                        IsEnabled="{Binding ReceiveTrackList}"
+                                        ValueTextFontSize="17"
+                                        Unit="сек."
+                                        Number="{Binding TrackListShowTime}"/>
+        </sv:Section>
 
+        <sv:SettingsView.GestureRecognizers>
+            <SwipeGestureRecognizer Direction="Right" Command="{Binding GoBack}"/>
+        </sv:SettingsView.GestureRecognizers>
+    </sv:SettingsView>
 </uc:DialogContentPage>
