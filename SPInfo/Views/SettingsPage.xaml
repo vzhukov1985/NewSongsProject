@@ -28,27 +28,30 @@
 
         <sv:Section Title="Подключение">
             <sv:EntryCell Keyboard="Url"
-                                  Title="IP-адрес сервера:"
+                          Title="IP-адрес сервера:"
                           ValueTextFontSize="17"
-                                  ValueText="{Binding IP}"/>
+                          ValueText="{Binding IP}"/>
         </sv:Section>
         <sv:Section Title="Внешний вид">
             <sv:SwitchCell Title="Показывать полное название трека"
-                                   On="{Binding ShowFullTrackName}"/>
+                           AccentColor="#d92826"
+                           On="{Binding ShowFullTrackName}"/>
             <sv:SwitchCell Title="Показывать тональность"
-                                   On="{Binding ShowKey}"/>
+                           AccentColor="#d92826"
+                           On="{Binding ShowKey}"/>
         </sv:Section>
         <sv:Section Title="Дополнительно">
             <sv:SwitchCell Title="Получать список песен"
-                                   On="{Binding ReceiveTrackList}"/>
+                           AccentColor="#d92826"
+                           On="{Binding ReceiveTrackList}"/>
             <sv:NumberPickerCell Title="Время показа списка песен"
-                                        PickerTitle="Время показа списка песен"
-                                        Min="3"
-                                        Max="20"
-                                        IsEnabled="{Binding ReceiveTrackList}"
-                                        ValueTextFontSize="17"
-                                        Unit="сек."
-                                        Number="{Binding TrackListShowTime}"/>
+                                 PickerTitle="Время показа списка песен"
+                                 Min="3"
+                                 Max="20"
+                                 IsEnabled="{Binding ReceiveTrackList}"
+                                 ValueTextFontSize="17"
+                                 Unit="сек."
+                                 Number="{Binding TrackListShowTime}"/>
         </sv:Section>
 
         <sv:SettingsView.GestureRecognizers>

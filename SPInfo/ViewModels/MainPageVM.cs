@@ -92,6 +92,8 @@ namespace SPInfo.ViewModels
         {
             _settings = DependencyService.Resolve<ISettings>();
             _globalStates = DependencyService.Resolve<IGlobalStates>();
+            CurrentTrack = "Нет подключения";
+            NextTrack = "Нет подключения";
 
             DeviceDisplay.KeepScreenOn = true;
 
