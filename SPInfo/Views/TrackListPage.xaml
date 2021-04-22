@@ -5,7 +5,8 @@
     xmlns:vm="clr-namespace:SPInfo.ViewModels"
     xmlns:uc="clr-namespace:SPInfo.UserControls"
     x:Class="SPInfo.Views.TrackListPage"
-    NavigationPage.HasNavigationBar="False">
+    NavigationPage.HasNavigationBar="False"
+    BackgroundColor="White">
 
     <ContentPage.BindingContext>
         <vm:TrackListPageVM/>
@@ -13,7 +14,7 @@
 
     <ContentPage.Content>
         <CollectionView ItemsSource="{Binding TrackList}"
-                        Margin="{OnPlatform Android='10,0,10,0', iOS='10,15,10,0'}"
+                        Margin="{OnPlatform UWP='', Android='10,0,10,0', iOS='10,15,10,0'}"
                         SelectionMode="Single"
                         SelectedItem="{Binding SelectedTrack}">
             <CollectionView.ItemsLayout>
@@ -31,7 +32,6 @@
                                Padding="0,0,30,0"
                                Text="{Binding Caption}">
                     </Label>
-
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

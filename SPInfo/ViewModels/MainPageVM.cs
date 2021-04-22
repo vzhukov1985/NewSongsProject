@@ -80,10 +80,12 @@ namespace SPInfo.ViewModels
 
         private SPClientSocket socket;
         private Timer tmrConnectionChecker;
+
         private ISettings _settings;
+        private IGlobalStates _globalStates;
+
         private TrackListItem currentTrackInfo;
         private TrackListItem nextTrackInfo;
-        private IGlobalStates _globalStates;
 
         public Command ShowSettingsCmd { get; set; }
 
@@ -99,31 +101,28 @@ namespace SPInfo.ViewModels
 
             ShowSettingsCmd = new Command(_ => ShowSettings());
 
-            ConnectAsync();
+            CreateConnection();
         }
 
         private async void ShowSettings()
         {
             if (await PageService.GoToSettingsPage())
             {
-                ConnectAsync();
+                socket.Disconnect();
+                CreateConnection();
             }
 
             CurrentTrack = RecreateTrackName(currentTrackInfo);
             NextTrack = RecreateTrackName(nextTrackInfo);
         }
 
-        private async void ConnectAsync()
+        private void CreateConnection()
         {
             IPAddress ipCheck;
             if (!IPAddress.TryParse(_settings.IP, out ipCheck))
                 return;
 
-            if (socket != null && socket.Connected)
-                await socket.Disconnect();
-
             socket = new SPClientSocket(_settings.IP, 55555);
-            socket.Connect();
             socket.OnMessageReceived += OnMessageReceived;
             socket.OnConnected += OnConnected;
 
@@ -146,16 +145,9 @@ namespace SPInfo.ViewModels
             }
         }
 
-        private async void OnConnected()
+        private void OnConnected()
         {
-            await Task.Run(() =>
-            {
-                while (!socket.Connected)
-                {
-                }
                 socket.SendMessage("ClientConnected");
-            });
-
         }
 
         private async void OnMessageReceived(string header, string data)

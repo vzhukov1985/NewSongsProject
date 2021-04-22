@@ -5,7 +5,8 @@
              xmlns:vm="clr-namespace:SPInfo.ViewModels"
              xmlns:uc="clr-namespace:SPInfo.UserControls"
              x:Class="SPInfo.Views.MainPage"
-             NavigationPage.HasNavigationBar="False">
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="White">
 
     <ContentPage.Resources>
         <conv:IsConnectedToColorConverter x:Key="IsConnectedToColorConverter"/>
@@ -17,7 +18,7 @@
     </ContentPage.BindingContext>
 
     <Grid>
-        <Grid Margin="{OnPlatform Android='15,3,15,3', iOS='15,15,15,0'}">
+        <Grid Margin="{OnPlatform UWP='', Android='15,3,15,3', iOS='15,15,15,0'}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
                 <RowDefinition/>

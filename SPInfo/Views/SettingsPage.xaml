@@ -16,11 +16,11 @@
     <sv:SettingsView>
         <sv:Section>
             <sv:Section.HeaderView>
-                <Label BackgroundColor="White"
-                       HorizontalTextAlignment="Center"
+                <Label HorizontalTextAlignment="Center"
                        VerticalTextAlignment="Center"
                        HorizontalOptions="FillAndExpand"
                        FontSize="17"
+                       FontAttributes="Bold"
                        Padding="0,10,0,10"
                        Text="Настройки"/>
             </sv:Section.HeaderView>

@@ -1,9 +1,12 @@
 ﻿using EzSockets;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace Common.Services
 {
@@ -14,72 +17,74 @@ namespace Common.Services
         public delegate void ConnectedHandler();
 
         public event MessageReceivedHandler OnMessageReceived;
-        public event ConnectedHandler OnConnected;    
+        public event ConnectedHandler OnConnected;
 
 
         public bool Connected { get; set; }
         public string IP { get; set; }
         public int Port { get; set; }
 
-        private readonly object connLocker = new object();
-
         private EzSocket socket;
         private Timer connCheckTimer;
         private bool connecting;
 
+        private DateTime lastPingTime;
 
         public SPClientSocket(string ip, int port)
         {
+            Connected = false;
             EzSocket.MaxMessageSize = int.MaxValue;
             IP = ip;
             Port = port;
-            connCheckTimer = new Timer(100);
+            Thread connThread = new Thread(Connect);
+            connThread.Start();
+            connCheckTimer = new Timer(500);
             connCheckTimer.Elapsed += ConnectionCheck;
             connCheckTimer.Start();
         }
 
-        public async void Connect()
+        public void Connect()
         {
-
-            await Task.Run(() =>
+            socket = new EzSocket(IP, Port, new EzEventsListener()
             {
-                lock (connLocker)
-                {
-                    connecting = true;
-
-                    socket = new EzSocket(IP, Port, new EzEventsListener()
-                    {
-                        OnMessageReadHandler = OnSocketMessageReceived,
-                        OnNewConnectionHandler = OnSocketConnected,
-                        OnConnectionClosedHandler = OnSocketConnectionClosed
-                    });
-
-                    if (socket.Connected)
-                    {
-                        socket.StartReadingMessages();
-                        Connected = true;
-                    }
-
-                    connecting = false;
-                }
+                OnMessageReadHandler = OnSocketMessageReceived,
+                OnConnectionClosedHandler = OnSocketConnectionClosed
             });
+
+            if (socket.Connected)
+            {
+                socket.StartReadingMessages();
+                OnConnected?.Invoke();
+                Connected = true;
+            }
+
+            connecting = false;
         }
 
-        public async Task Disconnect()
+        public void Disconnect()
         {
-            await Task.Run(() =>
+            connCheckTimer.Stop();
+            if (socket != null)
             {
-                connCheckTimer.Stop();
                 socket.StopReadingMessages();
-                socket.Close();                
-            });
+                socket.Close();
+            }
         }
 
         private void ConnectionCheck(object sender, ElapsedEventArgs e)
         {
-            if (!socket.Connected && !connecting)
+            if ((DateTime.Now - lastPingTime).TotalSeconds >= 2)
             {
-                Connect();
+                Disconnect();
+                connCheckTimer.Start();
+            }
+
+            if ((socket == null && !connecting) || (!socket.Connected && !connecting))
+            {
+                connecting = true;
+
+                Thread connThread = new Thread(Connect);
+                connThread.Start();
             }
         }
 
@@ -96,12 +101,10 @@ namespace Common.Services
             string strHeader = msg.Substring(0, msg.IndexOf('|'));
             string strData = msg.Substring(msg.IndexOf('|') + 1);
 
-            OnMessageReceived?.Invoke(strHeader, strData);
-        }
+            if (strHeader == "P")
+                lastPingTime = DateTime.Now;
 
-        private void OnSocketConnected(EzSocket socket)
-        {
-            OnConnected?.Invoke();
+            OnMessageReceived?.Invoke(strHeader, strData);
         }
 
         private void OnSocketConnectionClosed(EzSocket socket)
