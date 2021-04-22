@@ -15,6 +15,8 @@ namespace NewSongsProject.Services
         private EzSocketListener socket;
         private List<SPClient> activeClients;
 
+        private Timer pingTimer;
+
         public delegate void MessageReceivedHandler(EzSocket socket, string header, string data);
 
         public event MessageReceivedHandler OnMessageReceived;
@@ -32,7 +34,15 @@ namespace NewSongsProject.Services
 
             activeClients = new List<SPClient>();
 
-            socket.ListenAsync(55555);
+            socket.ListenAsync(port);
+            pingTimer = new Timer(100);
+            pingTimer.Elapsed += OnPingTimerElapsed;
+            pingTimer.Start();
+        }
+
+        private void OnPingTimerElapsed(object sender, ElapsedEventArgs s)
+        {
+            BroadcastMessage("P");
         }
 
         public void SendMessageToClient(EzSocket socket, string header, string data)
@@ -45,7 +55,7 @@ namespace NewSongsProject.Services
             socket.SendMessageAsync(Encoding.UTF8.GetBytes(header + "|" + data));
         }
 
-        public void BroadcastMessage(string header, string data)
+        public void BroadcastMessage(string header, string data = "")
         {
             foreach (var client in activeClients)
             {
@@ -57,11 +67,13 @@ namespace NewSongsProject.Services
         {
             socket.StartReadingMessages();
             activeClients.Add(new SPClient(socket));
+            Debug.WriteLine(activeClients.Count);
         }
 
         private void OnConnectionClosedHandler(EzSocket socket)
         {
             activeClients.RemoveAll(c => !c.Socket.Connected);
+            Debug.WriteLine(activeClients.Count);
         }
 
         private void OnSocketMessageReceived(EzSocket socket, byte[] data)
