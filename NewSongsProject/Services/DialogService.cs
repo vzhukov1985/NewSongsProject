@@ -51,6 +51,8 @@ namespace NewSongsProject.Services
             {
                 return new AppSettings()
                 {
+                    CakewalkPath = dlgVM.CakewalkPath,
+                    ProjectsPath = dlgVM.ProjectsPath,
                     TrackListFontSize = dlgVM.FontSize,
                     MainWindowOpacity = (double)dlgVM.Opacity / 100,
                     TrackCategories = dlgVM.Categories.ToList()
@@ -62,7 +64,7 @@ namespace NewSongsProject.Services
             }
         }
 
-        public static bool ShowOpenFileDialog()
+        public static bool ShowOpenPlaylistFileDialog()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Hollywood Playlist| *.hpl";
@@ -74,7 +76,7 @@ namespace NewSongsProject.Services
             return false;
         }
 
-        public static bool ShowSaveFileDialog()
+        public static bool ShowSavePlaylistFileDialog()
         {
             SaveFileDialog openFileDialog = new SaveFileDialog();
             openFileDialog.Filter = "Hollywood Playlist| *.hpl";

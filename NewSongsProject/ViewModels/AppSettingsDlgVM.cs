@@ -23,6 +23,29 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private string _cakewalkPath;
+        public string CakewalkPath
+        {
+            get { return _cakewalkPath; }
+            set
+            {
+                _cakewalkPath = value;
+                OnPropertyChanged("CakewalkPath");
+            }
+        }
+
+        private string _projectsPath;
+        public string ProjectsPath
+        {
+            get { return _projectsPath; }
+            set
+            {
+                _projectsPath = value;
+                OnPropertyChanged("ProjectsPath");
+            }
+        }
+
+
         private int _fontSize;
         public int FontSize
         {
@@ -45,12 +68,14 @@ namespace NewSongsProject.ViewModels
             }
         }
 
-
-
         public RelayCommand ShowSelectColorDialogCmd { get; set; }
+        public RelayCommand BrowseCakewalkCmd { get; set; }
+        public RelayCommand BrowseProjectsPathCmd { get; set; }
 
         public AppSettingsDlgVM(AppSettings appSettings)
         {
+            CakewalkPath = appSettings.CakewalkPath;
+            ProjectsPath = appSettings.ProjectsPath;
             FontSize = appSettings.TrackListFontSize;
             Opacity = (int)(appSettings.MainWindowOpacity * 100);
 
@@ -61,6 +86,30 @@ namespace NewSongsProject.ViewModels
             }
 
             ShowSelectColorDialogCmd = new RelayCommand((cat) => ChangeCategoryColor((TrackCategory)cat));
+            BrowseCakewalkCmd = new RelayCommand(_ => BrowseCakewalk());
+            BrowseProjectsPathCmd = new RelayCommand(_ => BrowseProjectsPath());
+        }
+
+        private void BrowseCakewalk()
+        {
+            using (OpenFileDialog cwDlg = new OpenFileDialog() { CheckFileExists = true, DefaultExt = ".exe", Filter = "Cakewalk Application Executable (*.exe)|*.exe"})
+            {
+                if (cwDlg.ShowDialog() == DialogResult.OK)
+                {
+                    CakewalkPath = cwDlg.FileName;
+                }
+            }
+        }
+
+        private void BrowseProjectsPath()
+        {
+            using (var dlgFolder = new FolderBrowserDialog())
+            {
+                if (dlgFolder.ShowDialog() == DialogResult.OK)
+                {
+                    ProjectsPath = dlgFolder.SelectedPath;
+                }
+            }
         }
 
         private void ChangeCategoryColor(TrackCategory category)

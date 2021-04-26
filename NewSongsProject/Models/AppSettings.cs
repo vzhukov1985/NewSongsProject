@@ -9,6 +9,8 @@ namespace NewSongsProject.Models
     public class AppSettings
     {
         public string InitialPath { get; set; }
+        public string CakewalkPath { get; set; }
+        public string ProjectsPath { get; set; }
         public int MainWindowX { get; set; }
         public int MainWindowY { get; set; }
         public int MainWindowHeight { get; set; }
@@ -23,7 +25,9 @@ namespace NewSongsProject.Models
 
         public AppSettings()
         {
-            InitialPath = "D:\\";
+            InitialPath = "C:\\";
+            CakewalkPath = null;
+            ProjectsPath = "C:\\";
             MainWindowX = 0;
             MainWindowY = 0;
             MainWindowHeight = 450;
