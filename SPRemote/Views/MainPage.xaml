@@ -112,7 +112,8 @@
                     TextColor="White"
                     FontAttributes="Bold"
                     FontSize="Large"
-                    Text="{Binding NextTrack.Caption}"/>
+                    Text="{Binding NextTrack.Caption}"
+                    Command="{Binding OpenNextTrackCmd}"/>
 
             <Label Grid.Row="4"
                    Margin="0,30,0,0"

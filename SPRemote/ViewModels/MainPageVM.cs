@@ -114,6 +114,7 @@ namespace SPRemote.ViewModels
 
         public Command UpDirCmd { get; set; }
         public Command ProcessSelectTrackListItemCmd { get; set; }
+        public Command OpenNextTrackCmd { get; set; }
 
         public MainPageVM()
         {
@@ -125,6 +126,7 @@ namespace SPRemote.ViewModels
 
             ProcessSelectTrackListItemCmd = new Command<TrackListItem>(t => ProcessSelectTrackListItem(t));
             UpDirCmd = new Command(_ => socket.SendMessage("RequestDirContents", upDirPath));
+            OpenNextTrackCmd = new Command(_ => socket.SendMessage("OpenNextTrack"));
 
             CreateConnection();
         }
@@ -163,6 +165,10 @@ namespace SPRemote.ViewModels
             {
                 socket.SendMessage("RequestDirContents", trackListItem.FullPath);
             }
+            else
+            {
+                socket.SendMessage("SelectTrack", JsonConvert.SerializeObject(trackListItem));
+            }
         }
 
         private void OnConnected()
@@ -175,7 +181,7 @@ namespace SPRemote.ViewModels
             switch (header)
             {
                 case "DirContents":
-                    DirContentsReceived(JsonConvert.DeserializeObject<DirContentsDto>(data));
+                    DirContentsReceived(data);
                     break;
                 case "CurrentTrack":
                     CurrentTrack = JsonConvert.DeserializeObject<TrackListItem>(data);
@@ -188,19 +194,23 @@ namespace SPRemote.ViewModels
             }
         }
 
-        private void DirContentsReceived(DirContentsDto dirContents)
+        private async void DirContentsReceived(string data)
         {
-            allTracksList = dirContents.TrackListItems;
-            CanUpDir = !dirContents.IsTopDir;
-            upDirPath = dirContents.UpDirPath;
+            await Task.Run(() =>
+            {
+                var dirContents = JsonConvert.DeserializeObject<DirContentsDto>(data);
+                allTracksList = dirContents.TrackListItems;
+                CanUpDir = !dirContents.IsTopDir;
+                upDirPath = dirContents.UpDirPath;
 
-            ProcessSearch();
+                ProcessSearch();
+            });
         }
 
         private void ProcessSearch()
         {
-            //TrackList = allTracksList.ToList();
-            TrackList = allTracksList.Where (t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 || t.IsDirectory == true).ToList();
+               var filteredTrackList = allTracksList.Where(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 || t.IsDirectory == true).ToList();
+               Device.BeginInvokeOnMainThread(() => TrackList = filteredTrackList);
         }
     }
 }
