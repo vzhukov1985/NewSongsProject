@@ -6,8 +6,8 @@ namespace Common.DTOs
 {
     public class DirContentsDto
     {
-        List<TrackListItem> TrackListItems { get; set; }
-        bool IsTopDir { get; set; }
-        string UpDirPath { get; set; }
+        public List<TrackListItem> TrackListItems { get; set; }
+        public bool IsTopDir { get; set; }
+        public string UpDirPath { get; set; }
     }
 }
