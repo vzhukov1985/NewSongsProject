@@ -505,6 +505,12 @@ namespace NewSongsProject.ViewModels
                 case "RequestDirContents":
                     SendDirContentsToSPRemote(socket, data);
                     break;
+                case "SelectTrack":
+                    Application.Current.Dispatcher.Invoke(() => SelectTrackByPath(JsonConvert.DeserializeObject<TrackListItem>(data).FullPath));
+                    break;
+                case "OpenNextTrack":
+                    ProcessTrackListItem();
+                    break;
                 default:
                     break;
             }
@@ -566,7 +572,7 @@ namespace NewSongsProject.ViewModels
             {
                 TrackListItems = GetDirectoryTracks(path),
                 IsTopDir = path == appSettings.ProjectsPath,
-                UpDirPath = null
+                UpDirPath = Directory.GetParent(path).FullName
             };
 
             spRemoteSocket.SendMessageToClient(socket, "DirContents", JsonConvert.SerializeObject(dirContents));
@@ -1201,7 +1207,7 @@ namespace NewSongsProject.ViewModels
                     TrackList = allTracksList.Where(t => (catFilterIndices.Contains(t.Category) &&
                                                                                            vocFilterIndices.Contains((int)t.VocalType) &&
                                                                                            (LoungeFilter == true ? t.IsLounge == true : true)) &&
-                                                                                           t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 || 
+                                                                                           t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                                                                            t.IsDirectory == true).ToList();
 
                     /*TrackList = string.IsNullOrEmpty(SearchText) ? allTracksList.Where(t => (catFilterIndices.Contains(t.Category) &&

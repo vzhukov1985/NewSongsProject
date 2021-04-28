@@ -10,12 +10,12 @@ namespace NewSongsProject.Models
     public class SPClient
     {
         public EzSocket Socket { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsDead { get; set; }
 
         public SPClient(EzSocket socket)
         {
             Socket = socket;
-            IsActive = false;
+            IsDead = false;
         }
     }
 }

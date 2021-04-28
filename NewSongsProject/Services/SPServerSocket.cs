@@ -21,6 +21,8 @@ namespace NewSongsProject.Services
 
         public event MessageReceivedHandler OnMessageReceived;
 
+        private readonly object locker = new object();
+
         public SPServerSocket(int port)
         {
             EzSocket.MaxMessageSize = int.MaxValue;
@@ -29,7 +31,8 @@ namespace NewSongsProject.Services
             {
                 OnNewConnectionHandler = OnNewConnectionHandler,
                 OnMessageReadHandler = OnSocketMessageReceived,
-                OnConnectionClosedHandler = OnConnectionClosedHandler
+                OnConnectionClosedHandler = OnConnectionClosedHandler,
+                OnExceptionHandler = OnSocketException
             });
 
             activeClients = new List<SPClient>();
@@ -40,47 +43,59 @@ namespace NewSongsProject.Services
             pingTimer.Start();
         }
 
+        private ExceptionHandlerResponse OnSocketException(EzSocket socket, Exception e)
+        {
+            return ExceptionHandlerResponse.CloseSocket;
+        }
+
         private void OnPingTimerElapsed(object sender, ElapsedEventArgs s)
         {
             BroadcastMessage("P");
         }
 
-        public void SendMessageToClient(EzSocket socket, string header, string data)
+        public async void SendMessageToClient(EzSocket socket, string header, string data)
         {
             if (string.IsNullOrEmpty(header))
                 header = "";
             if (string.IsNullOrEmpty(data))
                 data = "";
 
-            socket.SendMessageAsync(Encoding.UTF8.GetBytes(header + "|" + data));
+            await socket.SendMessageAsync(Encoding.UTF8.GetBytes(header + "|" + data));
         }
 
         public void BroadcastMessage(string header, string data = "")
         {
-            foreach (var client in activeClients)
+            Task.Run(() =>
             {
-                client.Socket.SendMessageAsync(Encoding.UTF8.GetBytes(header + "|" + data));
-            }
+                lock (locker)
+                {
+                    activeClients.RemoveAll(c => c.IsDead);
+                    foreach (var client in activeClients)
+                    {
+                        client.Socket.SendMessage(Encoding.UTF8.GetBytes(header + "|" + data));
+                    }
+                }
+            });
         }
 
         private void OnNewConnectionHandler(EzSocket socket)
         {
             socket.StartReadingMessages();
             activeClients.Add(new SPClient(socket));
-            Debug.WriteLine(activeClients.Count);
+            Debug.WriteLine("nc - " + activeClients.Count(c => !c.IsDead).ToString());
         }
 
         private void OnConnectionClosedHandler(EzSocket socket)
         {
-            activeClients.RemoveAll(c => !c.Socket.Connected);
-            Debug.WriteLine(activeClients.Count);
+            activeClients.FirstOrDefault(c => c.Socket == socket).IsDead = true;
+            Debug.WriteLine("cc - " + activeClients.Count(c => !c.IsDead).ToString());
         }
 
         private void OnSocketMessageReceived(EzSocket socket, byte[] data)
         {
             string msg = Encoding.UTF8.GetString(data);
             string strHeader = msg.Substring(0, msg.IndexOf('|'));
-            string strData = msg.Substring(msg.IndexOf('|')+1);
+            string strData = msg.Substring(msg.IndexOf('|') + 1);
 
             OnMessageReceived?.Invoke(socket, strHeader, strData);
         }
