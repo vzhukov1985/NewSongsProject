@@ -12,30 +12,16 @@ using System.Timers;
 using Xamarin.Essentials;
 using Xamarin.Forms.Internals;
 using Common.Models;
+using SPRemote.Models;
+using Xamarin.Forms;
+using Common.Services;
+using Newtonsoft.Json;
+using Common.DTOs;
 
 namespace SPRemote.ViewModels
 {
-    public class MainPageVM : INotifyPropertyChanged
+    public class MainPageVM : BaseVM
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged([CallerMemberName] string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
-
-        private string _ip;
-        public string IP
-        {
-            get { return _ip; }
-            set
-            {
-                _ip = value;
-                Preferences.Set("IP", value);
-                if (socket != null) socket.IP = value;
-                OnPropertyChanged("IP");
-            }
-        }
-
         private bool _isConnected;
         public bool IsConnected
         {
@@ -47,82 +33,120 @@ namespace SPRemote.ViewModels
             }
         }
 
-        private string _searchString;
-        public string SearchString
+        public string IP
         {
-            get { return _searchString; }
+            get { return _settings.IP; }
             set
             {
-                _searchString = value;
-                ProcessSearch();
-                OnPropertyChanged("SearchString");
+                _settings.IP = value;
+                socket.Disconnect();
+                CreateConnection();
+                OnPropertyChanged("IP");
             }
         }
 
-        private List<string> _shownTracks;
-        public List<string> ShownTracks
+        private string _searchText;
+        public string SearchText
         {
-            get { return _shownTracks; }
+            get { return _searchText; }
             set
             {
-                _shownTracks = value;
-                OnPropertyChanged("ShownTracks");
+                _searchText = value;
+                OnPropertyChanged("SearchText");
             }
         }
 
-        private string _openedTrack;
-        public string OpenedTrack
+        private List<TrackListItem> _trackList;
+        public List<TrackListItem> TrackList
         {
-            get { return _openedTrack; }
+            get { return _trackList; }
             set
             {
-                _openedTrack = value;
-                OnPropertyChanged("OpenedTrack");
+                _trackList = value;
+                OnPropertyChanged("TrackList");
             }
         }
 
-        private string _selectedTrack;
-        public string SelectedTrack
+        private bool _canUpDir;
+        public bool CanUpDir
         {
-            get { return _selectedTrack; }
+            get { return _canUpDir; }
             set
             {
-                _selectedTrack = value;
-                if (!string.IsNullOrEmpty(value))
-                    SelectTrackDir(value);
-                OnPropertyChanged("SelectedTrack");
+                _canUpDir = value;
+                OnPropertyChanged("CanUpDir");
+            }
+        }
+
+
+
+        private TrackListItem _currentTrack;
+        public TrackListItem CurrentTrack
+        {
+            get { return _currentTrack; }
+            set
+            {
+                _currentTrack = value;
+                OnPropertyChanged("CurrentTrack");
+            }
+        }
+
+        private TrackListItem _nextTrack;
+        public TrackListItem NextTrack
+        {
+            get { return _nextTrack; }
+            set
+            {
+                _nextTrack = value;
+                OnPropertyChanged("NextTrack");
             }
         }
 
 
 
 
-
+        private ISettings _settings;
         private SPClientSocket socket;
+        private Timer tmrConnectionChecker;
+        private string upDirPath;
 
-        private Timer connectionChecker;
-        private List<string> allTracks;
+        private List<TrackListItem> allTracksList;
+
+        public Command UpDirCmd { get; set; }
+        public Command ProcessSelectTrackListItemCmd { get; set; }
 
         public MainPageVM()
         {
-            ShownTracks = new List<string>();
-            IP = Preferences.Get("IP", "192.168.1.1");
-            socket = new SPClientSocket(IP, 55555);
-            socket.OnMessageReceived += OnMessageReceived;
-            socket.OnConnected += OnConnected;
-            socket.StartReceiving();
-            IsConnected = false;
+            _settings = DependencyService.Resolve<ISettings>();
 
-            connectionChecker = new Timer(500);
-            connectionChecker.Elapsed += CheckConnection;
-            connectionChecker.Enabled = true;
+            DeviceDisplay.KeepScreenOn = true;
+
+            SearchText = "";
+
+            ProcessSelectTrackListItemCmd = new Command<TrackListItem>(t => ProcessSelectTrackListItem(t));
+            UpDirCmd = new Command(_ => socket.SendMessage("RequestDirContents", upDirPath));
+
+            CreateConnection();
         }
 
-
-
-        private void CheckConnection(Object source, ElapsedEventArgs e)
+        private void CreateConnection()
         {
-            if (socket.Connected)
+            IPAddress ipCheck;
+            if (!IPAddress.TryParse(_settings.IP, out ipCheck))
+                return;
+
+            socket = new SPClientSocket(_settings.IP, 55556);
+            socket.OnMessageReceived += OnMessageReceived;
+            socket.OnConnected += OnConnected;
+
+            tmrConnectionChecker = new Timer(500);
+            tmrConnectionChecker.Elapsed += OnConnectionCheckerElapsed;
+            tmrConnectionChecker.Start();
+        }
+
+        private void OnConnectionCheckerElapsed(object sender, ElapsedEventArgs e)
+        {
+            if (socket != null && socket.Connected)
             {
                 IsConnected = true;
             }
@@ -132,48 +156,51 @@ namespace SPRemote.ViewModels
             }
         }
 
+
+        private void ProcessSelectTrackListItem(TrackListItem trackListItem)
+        {
+            if (trackListItem.IsDirectory)
+            {
+                socket.SendMessage("RequestDirContents", trackListItem.FullPath);
+            }
+        }
+
         private void OnConnected()
         {
-            RequestAllTracksList();
+            socket.SendMessage("ClientConnected");
         }
 
-
-        private void ProcessSearch()
+        private void OnMessageReceived(string header, string data)
         {
-            if (allTracks != null)
+            switch (header)
             {
-                ShownTracks = string.IsNullOrEmpty(SearchString) ? allTracks : allTracks.FindAll(s => s.IndexOf(SearchString, StringComparison.OrdinalIgnoreCase) >= 0);
+                case "DirContents":
+                    DirContentsReceived(JsonConvert.DeserializeObject<DirContentsDto>(data));
+                    break;
+                case "CurrentTrack":
+                    CurrentTrack = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    break;
+                case "NextTrack":
+                    NextTrack = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    break;
+                default:
+                    break;
             }
         }
 
-
-        private void RequestAllTracksList()
+        private void DirContentsReceived(DirContentsDto dirContents)
         {
-            socket.SendMessage("RequestTracksList");
-        }
+            allTracksList = dirContents.TrackListItems;
+            CanUpDir = !dirContents.IsTopDir;
+            upDirPath = dirContents.UpDirPath;
 
-        private void SelectTrackDir(string itemName)
-        {
-            socket.SendMessage($"SelectTrackDir|{itemName}");
-        }
-
-        private void OnMessageReceived(string message)
-        {
-            if (message.StartsWith("TracksList"))
-            {
-
-                TrackListReceived(message.Substring(11));
-            }
-
-            OpenedTrack = message;
-        }
-
-        private void TrackListReceived(string tracks)
-        {
-            allTracks = tracks.Split('|').ToList();
-            allTracks.Insert(0, "...");
             ProcessSearch();
         }
 
+        private void ProcessSearch()
+        {
+            //TrackList = allTracksList.ToList();
+            TrackList = allTracksList.Where (t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 || t.IsDirectory == true).ToList();
+        }
     }
 }

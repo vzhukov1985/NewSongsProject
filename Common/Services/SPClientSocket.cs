@@ -48,7 +48,7 @@ namespace Common.Services
             socket = new EzSocket(IP, Port, new EzEventsListener()
             {
                 OnMessageReadHandler = OnSocketMessageReceived,
-                OnConnectionClosedHandler = OnSocketConnectionClosed
+                OnConnectionClosedHandler = OnSocketConnectionClosed,
             });
 
             if (socket.Connected)
@@ -102,9 +102,14 @@ namespace Common.Services
             string strData = msg.Substring(msg.IndexOf('|') + 1);
 
             if (strHeader == "P")
+            {
                 lastPingTime = DateTime.Now;
-
-            OnMessageReceived?.Invoke(strHeader, strData);
+            }
+            else
+            {
+                OnMessageReceived?.Invoke(strHeader, strData);
+                Debug.WriteLine(strHeader);
+            }
         }
 
         private void OnSocketConnectionClosed(EzSocket socket)

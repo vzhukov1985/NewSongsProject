@@ -1,5 +1,7 @@
 ﻿using System;
+using SPRemote.Models;
 using SPRemote.ViewModels;
+using SPRemote.Views;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -10,6 +12,8 @@ namespace SPRemote
         public App()
         {
             InitializeComponent();
+
+            DependencyService.RegisterSingleton<ISettings>(new Settings());
 
             MainPage = new MainPage();
         }

@@ -4,7 +4,7 @@ using Xamarin.Forms;
 
 namespace SPRemote.Converters
 {
-    public class BoolToColorConverter:IValueConverter
+    public class BoolToRedGreenColorConverter:IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
