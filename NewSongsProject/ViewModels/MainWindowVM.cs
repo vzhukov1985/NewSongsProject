@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Common.Models;
+using Common.DTOs;
 
 namespace NewSongsProject.ViewModels
 {
@@ -89,6 +90,7 @@ namespace NewSongsProject.ViewModels
             {
                 _selectedTrackListItem = value;
                 SendNextTrackToSPInfo();
+                SendNextTrackToSPRemote();
                 OnPropertyChanged("SelectedTrackListItem");
             }
         }
@@ -135,6 +137,7 @@ namespace NewSongsProject.ViewModels
                 {
                     _openedTrack = value;
                     SendCurrentTrackToSPInfo(value);
+                    SendCurrentTrackToSPRemote(value);
 
                     OnPropertyChanged("OpenedTrack");
                 }
@@ -358,6 +361,7 @@ namespace NewSongsProject.ViewModels
         private SemaphoreSlim searchSmph;
 
         private SPServerSocket spInfoSocket;
+        private SPServerSocket spRemoteSocket;
 
         private DateTime lastSPInfoSendTrackListTime = DateTime.Now;
 
@@ -483,27 +487,133 @@ namespace NewSongsProject.ViewModels
 
             spInfoSocket = new SPServerSocket(55555);
             spInfoSocket.OnMessageReceived += OnSPInfoMessageReceived;
+            spRemoteSocket = new SPServerSocket(55556);
+            spRemoteSocket.OnMessageReceived += OnSPRemoteMessageReceived;
 
             ChangeDirectory(currentPath);
         }
 
-        private void RunCakwalkIfNotRunning()
+        private void OnSPRemoteMessageReceived(EzSocket socket, string header, string data)
         {
-            var wndHandle = FindWindow("Cakewalk Core", null);
-            if (wndHandle != IntPtr.Zero || string.IsNullOrEmpty(appSettings.CakewalkPath))
-                return;
+            switch (header)
+            {
+                case "ClientConnected":
+                    SendDirContentsToSPRemote(socket, appSettings.ProjectsPath);
+                    SendCurrentTrackToSPRemote(OpenedTrack, socket);
+                    SendNextTrackToSPRemote();
+                    break;
+                case "RequestDirContents":
+                    SendDirContentsToSPRemote(socket, data);
+                    break;
+                default:
+                    break;
+            }
+        }
 
+        private void SendNextTrackToSPRemote(EzSocket socket = null)
+        {
+            if (SelectedTrackListItem != null)
+            {
+                if (socket == null)
+                {
+                    spRemoteSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                }
+                else
+                {
+                    spRemoteSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                }
+            }
+        }
+
+        private void SendCurrentTrackToSPRemote(string trackCaption, EzSocket socket = null)
+        {
+            if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
+            {
+                TrackListItem curTrack = null;
+                curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
+
+                if (curTrack == null)
+                {
+                    curTrack = new TrackListItem()
+                    {
+                        Caption = "Нет",
+                        Category = 0,
+                        FullName = "Нет",
+                        FullPath = "Нет",
+                        IsDirectory = false,
+                        IsLounge = false,
+                        Key = "",
+                        Tags = new List<string>(),
+                        Tempo = 0,
+                        TimesOpened = 0,
+                        VocalType = VocalType.Duet
+                    };
+                }
+                if (socket == null)
+                {
+                    spRemoteSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                }
+                else
+                {
+                    spRemoteSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                }
+            }
+        }
+
+        private void SendDirContentsToSPRemote(EzSocket socket, string path)
+        {
+            var dirContents = new DirContentsDto()
+            {
+                TrackListItems = GetDirectoryTracks(path),
+                IsTopDir = path == appSettings.ProjectsPath,
+                UpDirPath = null
+            };
+
+            spRemoteSocket.SendMessageToClient(socket, "DirContents", JsonConvert.SerializeObject(dirContents));
+        }
+
+        private List<TrackListItem> GetDirectoryTracks(string path)
+        {
             try
             {
-                Process.Start(appSettings.CakewalkPath);
+                var items = Directory.GetDirectories(path).Where(d => !Path.GetFileName(d).Equals("MixScenes") && Path.GetFileName(d) != "Audio").Select(d => new TrackListItem()
+                {
+                    Caption = Path.GetFileName(d),
+                    IsDirectory = true,
+                    FullPath = d
+                })
+                    .OrderBy(d => d.Caption)
+                    .ToList();
+
+                items.AddRange(Directory.GetFiles(path, "*.cwp").Select(f => new TrackListItem()
+                {
+                    Caption = Path.GetFileNameWithoutExtension(f),
+                    IsDirectory = false,
+                    FullPath = f
+                }));
+
+                foreach (var item in items)
+                {
+                    var existingInfo = additionalTrackInfos.FirstOrDefault(i => i.TrackPath == item.FullPath);
+                    if (existingInfo != null)
+                    {
+                        item.FullName = existingInfo.FullName;
+                        item.Category = existingInfo.Category;
+                        item.VocalType = existingInfo.VocalType;
+                        item.IsLounge = existingInfo.IsLounge;
+                        item.Key = existingInfo.Key;
+                        item.Tempo = existingInfo.Tempo;
+                        item.Tags = existingInfo.Tags;
+                        item.TimesOpened = existingInfo.TimesOpened;
+                    }
+                }
+
+                return items.OrderByDescending(t => t.IsDirectory).ThenByDescending(t => t.TimesOpened).ThenBy(t => t.Caption).ToList();
             }
             catch
             {
-                return;
+                return null;
             }
-
-            tmrFocusCounter = 0;
-            tmrFocus = new Timer((tmr) => { SetForegroundWindow(mainWndHandle); if (tmrFocusCounter > 100) tmrFocus.Change(Timeout.Infinite, Timeout.Infinite); tmrFocusCounter++; }, 0, 0, 100);
 
         }
 
@@ -1105,6 +1215,25 @@ namespace NewSongsProject.ViewModels
             {
                 return;
             }
+        }
+
+        private void RunCakwalkIfNotRunning()
+        {
+            var wndHandle = FindWindow("Cakewalk Core", null);
+            if (wndHandle != IntPtr.Zero || string.IsNullOrEmpty(appSettings.CakewalkPath))
+                return;
+
+            try
+            {
+                Process.Start(appSettings.CakewalkPath);
+            }
+            catch
+            {
+                return;
+            }
+
+            tmrFocusCounter = 0;
+            tmrFocus = new Timer((tmr) => { SetForegroundWindow(mainWndHandle); if (tmrFocusCounter > 100) tmrFocus.Change(Timeout.Infinite, Timeout.Infinite); tmrFocusCounter++; }, 0, 0, 100);
         }
 
         private void LoadAppSettings()
