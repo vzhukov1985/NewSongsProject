@@ -88,9 +88,9 @@ namespace Common.Services
             }
         }
 
-        public void SendMessage(string header, string data = "")
+        public async void SendMessage(string header, string data = "")
         {
-            socket.SendMessageAsync(header + '|' + data);
+            await socket.SendMessageAsync(header + '|' + data);
         }
 
         private void OnSocketMessageReceived(EzSocket socket, byte[] data)
