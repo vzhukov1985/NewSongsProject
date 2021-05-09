@@ -153,6 +153,7 @@ namespace NewSongsProject.ViewModels
                 if (_isPlaying != value)
                 {
                     _isPlaying = value;
+                    SendPlayStatusToSPRemote();
                     OnPropertyChanged("IsPlaying");
                 }
             }
@@ -449,11 +450,11 @@ namespace NewSongsProject.ViewModels
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
             AlterTracksColoredStateCmd = new RelayCommand(_ => AreTracksColored = !AreTracksColored);
 
-            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); if (Playlist.Count == 1) SelectedPlaylistItem = Playlist[0]; }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
-            MovePlaylistItemUpCmd = new RelayCommand(_ => MovePlaylistItemUp(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
-            MovePlaylistItemDownCmd = new RelayCommand(_ => MovePlaylistItemDown(), _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
-            RemovePlaylistItemCmd = new RelayCommand(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); }, _ => SelectedPlaylistItem != null);
-            ClearPlaylistCmd = new RelayCommand(_ => Playlist = new List<TrackListItem>(), _ => Playlist.Count > 0);
+            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); if (Playlist.Count == 1) SelectedPlaylistItem = Playlist[0]; SendPlaylistToSPRemote(); }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
+            MovePlaylistItemUpCmd = new RelayCommand(_ => { MovePlaylistItemUp(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
+            MovePlaylistItemDownCmd = new RelayCommand(_ => { MovePlaylistItemDown(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
+            RemovePlaylistItemCmd = new RelayCommand(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null);
+            ClearPlaylistCmd = new RelayCommand(_ => { Playlist = new List<TrackListItem>(); SendPlaylistToSPRemote(); }, _ => Playlist.Count > 0);
             LoadPlaylistCmd = new RelayCommand(_ => LoadPlaylist());
             SavePlaylistCmd = new RelayCommand(_ => SavePlaylist(), _ => Playlist.Count > 0);
 
@@ -500,19 +501,57 @@ namespace NewSongsProject.ViewModels
                 case "ClientConnected":
                     SendDirContentsToSPRemote(socket, appSettings.ProjectsPath);
                     SendCurrentTrackToSPRemote(OpenedTrack, socket);
-                    SendNextTrackToSPRemote();
+                    SendNextTrackToSPRemote(socket);
+                    SendPlaylistToSPRemote(socket);
+                    SendPlayStatusToSPRemote(socket);
                     break;
                 case "RequestDirContents":
                     SendDirContentsToSPRemote(socket, data);
+                    break;
+                case "RequestPlayStatus":
+                    SendPlayStatusToSPRemote(socket);
                     break;
                 case "SelectTrack":
                     Application.Current.Dispatcher.Invoke(() => SelectTrackByPath(JsonConvert.DeserializeObject<TrackListItem>(data).FullPath));
                     break;
                 case "OpenNextTrack":
-                    ProcessTrackListItem();
+                    Application.Current.Dispatcher.Invoke(() => ProcessTrackListItem());
+                    break;
+                case "PlayStop":
+                    Application.Current.Dispatcher.Invoke(() => PlayStop());
                     break;
                 default:
                     break;
+            }
+        }
+
+        private void SendPlayStatusToSPRemote(EzSocket socket = null)
+        {
+            if (socket == null)
+            {
+                spRemoteSocket.BroadcastMessage("PlayStatus", IsPlaying ? "1" : "0");
+            }
+            else
+            {
+                spRemoteSocket.SendMessageToClient(socket, "PlayStatus", IsPlaying ? "1" : "0");
+            }
+        }
+
+        private void SendPlaylistToSPRemote(EzSocket socket = null)
+        {
+            if (Playlist != null)
+            {
+                if (SelectedTrackListItem != null)
+                {
+                    if (socket == null)
+                    {
+                        spRemoteSocket.BroadcastMessage("Playlist", JsonConvert.SerializeObject(Playlist));
+                    }
+                    else
+                    {
+                        spRemoteSocket.SendMessageToClient(socket, "Playlist", JsonConvert.SerializeObject(Playlist));
+                    }
+                }
             }
         }
 
