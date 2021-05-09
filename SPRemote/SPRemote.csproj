@@ -26,8 +26,24 @@
     <Folder Include="Services\" />
     <Folder Include="Views\" />
     <Folder Include="Models\" />
+    <Folder Include="Images\" />
+    <Folder Include="Behaviors\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Images\Upfolder.png" />
+    <None Remove="Images\LED_Green.png" />
+    <None Remove="Images\LED_Red.png" />
+    <None Remove="Images\Play.png" />
+    <None Remove="Images\Stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\Upfolder.png" />
+    <EmbeddedResource Include="Images\LEDRed.png" />
+    <EmbeddedResource Include="Images\LEDGreen.png" />
+    <EmbeddedResource Include="Images\Play.png" />
+    <EmbeddedResource Include="Images\Stop.png" />
   </ItemGroup>
 </Project>

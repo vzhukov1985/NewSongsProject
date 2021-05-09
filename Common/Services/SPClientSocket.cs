@@ -108,7 +108,7 @@ namespace Common.Services
             else
             {
                 OnMessageReceived?.Invoke(strHeader, strData);
-                Debug.WriteLine(strHeader);
+                Debug.WriteLine($"Socket message received: {strHeader}");
             }
         }
 

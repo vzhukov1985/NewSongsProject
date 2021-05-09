@@ -52,6 +52,7 @@ namespace SPRemote.ViewModels
             set
             {
                 _searchText = value;
+                ProcessSearch();
                 OnPropertyChanged("SearchText");
             }
         }
@@ -87,6 +88,15 @@ namespace SPRemote.ViewModels
             set
             {
                 _currentTrack = value;
+                if (value == null || value.Caption == "Нет")
+                {
+                    PlayState = PlayState.None;
+                }
+                else
+                {
+                    if (PlayState == PlayState.None)
+                        socket.SendMessage("RequestPlayStatus");
+                }
                 OnPropertyChanged("CurrentTrack");
             }
         }
@@ -98,7 +108,54 @@ namespace SPRemote.ViewModels
             set
             {
                 _nextTrack = value;
+                if (value == null || value.IsDirectory)
+                {
+                    value.Caption = "Нет";
+                    CanOpenNextTrack = false;
+                }
+                else
+                {
+                    CanOpenNextTrack = true;
+                }
+
                 OnPropertyChanged("NextTrack");
+            }
+        }
+
+        private List<TrackListItem> _playlist;
+        public List<TrackListItem> Playlist
+        {
+            get { return _playlist; }
+            set
+            {
+                _playlist = value;
+                OnPropertyChanged("Playlist");
+            }
+        }
+
+        private bool _canOpenNextTrack;
+        public bool CanOpenNextTrack
+        {
+            get { return _canOpenNextTrack; }
+            set
+            {
+                _canOpenNextTrack = value;
+                OnPropertyChanged("CanOpenNextTrack");
+            }
+        }
+
+        private PlayState _playState;
+        public PlayState PlayState
+        {
+            get { return _playState; }
+            set
+            {
+                _playState = value;
+                if (CurrentTrack == null || CurrentTrack.Caption == "Нет")
+                {
+                    _playState = PlayState.None;
+                }
+                OnPropertyChanged("PlayState");
             }
         }
 
@@ -115,6 +172,7 @@ namespace SPRemote.ViewModels
         public Command UpDirCmd { get; set; }
         public Command ProcessSelectTrackListItemCmd { get; set; }
         public Command OpenNextTrackCmd { get; set; }
+        public Command PlayStopCmd { get; set; }
 
         public MainPageVM()
         {
@@ -126,7 +184,8 @@ namespace SPRemote.ViewModels
 
             ProcessSelectTrackListItemCmd = new Command<TrackListItem>(t => ProcessSelectTrackListItem(t));
             UpDirCmd = new Command(_ => socket.SendMessage("RequestDirContents", upDirPath));
-            OpenNextTrackCmd = new Command(_ => socket.SendMessage("OpenNextTrack"));
+            OpenNextTrackCmd = new Command(_ => socket.SendMessage("OpenNextTrack"), _ => CanOpenNextTrack);
+            PlayStopCmd = new Command(_ => socket.SendMessage("PlayStop"), _ => PlayState != PlayState.None);
 
             CreateConnection();
         }
@@ -169,6 +228,9 @@ namespace SPRemote.ViewModels
             {
                 socket.SendMessage("SelectTrack", JsonConvert.SerializeObject(trackListItem));
             }
+
+            SearchText = "";
+            ProcessSearch();
         }
 
         private void OnConnected()
@@ -176,7 +238,7 @@ namespace SPRemote.ViewModels
             socket.SendMessage("ClientConnected");
         }
 
-        private void OnMessageReceived(string header, string data)
+        private async void OnMessageReceived(string header, string data)
         {
             switch (header)
             {
@@ -184,10 +246,16 @@ namespace SPRemote.ViewModels
                     DirContentsReceived(data);
                     break;
                 case "CurrentTrack":
-                    CurrentTrack = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    await Task.Run(() => CurrentTrack = JsonConvert.DeserializeObject<TrackListItem>(data));
                     break;
                 case "NextTrack":
-                    NextTrack = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    await Task.Run(() => NextTrack = JsonConvert.DeserializeObject<TrackListItem>(data));
+                    break;
+                case "Playlist":
+                    await Task.Run(() => Playlist = JsonConvert.DeserializeObject<List<TrackListItem>>(data));
+                    break;
+                case "PlayStatus":
+                    await Task.Run(() => PlayState = data == "1" ? PlayState.Playing : PlayState.Stopped);
                     break;
                 default:
                     break;
@@ -203,14 +271,18 @@ namespace SPRemote.ViewModels
                 CanUpDir = !dirContents.IsTopDir;
                 upDirPath = dirContents.UpDirPath;
 
+                SearchText = "";
                 ProcessSearch();
             });
         }
 
         private void ProcessSearch()
         {
-               var filteredTrackList = allTracksList.Where(t => t.Caption.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0 || t.IsDirectory == true).ToList();
-               Device.BeginInvokeOnMainThread(() => TrackList = filteredTrackList);
+            if (allTracksList != null)
+            {
+                var filteredTrackList = allTracksList.Where(t => t.Caption.IndexOf(SearchText != null ? SearchText : "", StringComparison.OrdinalIgnoreCase) >= 0 || t.IsDirectory == true).ToList();
+                Device.BeginInvokeOnMainThread(() => TrackList = filteredTrackList);
+            }
         }
     }
 }

@@ -3,12 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:conv="clr-namespace:SPRemote.Converters"
              xmlns:vm="clr-namespace:SPRemote.ViewModels"
+             xmlns:ext="clr-namespace:SPRemote.Extensions"
+             xmlns:bv="clr-namespace:SPRemote.Behaviors"
              x:Class="SPRemote.Views.MainPage"
              x:Name="MainPg">
     <ContentPage.Resources>
-        <conv:BoolToRedGreenColorConverter x:Key="BoolToRedGreenColorConverter"/>
         <conv:BoolToDirectoryFontConverter x:Key="BoolToDirectoryFontConverter"/>
+        <conv:BoolToGreenGrayColorConverter x:Key="BoolToGreenGrayColorConverter"/>
+        <conv:BoolToRedGrayColorConverter x:Key="BoolToRedGrayColorConverter"/>
+        <conv:BoolToLEDConverter x:Key="BoolToLEDConverter"/>
+        <conv:PlayStateToImgSrcConverter x:Key="PlayStateToImgSrcConverter"/>
+        <conv:PlayStateToColorConverter x:Key="PlayStateToColorConverter"/>
+        <conv:PlayStateToBoolConverter x:Key="PlayStateToBoolConverter"/>
+
+        <Style x:Key="CustomButton" TargetType="Frame">
+            <Style.Setters>
+                <Setter Property="bv:FrameAsButtonBehavior.AttachBehavior" Value="True"/>
+                <Setter Property="HasShadow" Value="False"/>
+            </Style.Setters>
+        </Style>
     </ContentPage.Resources>
+
 
     <ContentPage.BindingContext>
         <vm:MainPageVM/>
@@ -21,7 +36,8 @@
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Row="0"
-              Grid.Column="0">
+              Grid.Column="0"
+              Padding="0">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -33,17 +49,23 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Row="0"
-                    Grid.Column="0"
-                    Margin="0,10,0,10"
-                    BackgroundColor="Green"
-                    TextColor="White"
-                    IsEnabled="{Binding CanUpDir}"
-                    Text="Up"
-                    Command="{Binding UpDirCmd}"/>
+            <Frame Grid.Row="0"
+                   Grid.Column="0"
+                   Margin="0,10,0,10"
+                   HeightRequest="10"
+                   Padding="8"
+                   IsEnabled="{Binding CanUpDir}"
+                   Style="{StaticResource CustomButton}"
+                   BackgroundColor="{Binding CanUpDir, Converter={StaticResource BoolToGreenGrayColorConverter}}">
+                <Image Source="{ext:ImageResource SPRemote.Images.Upfolder.png}"/>
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding UpDirCmd}"/>
+                </Frame.GestureRecognizers>
+            </Frame>
 
             <SearchBar Grid.Row="0"
-                       Grid.Column="1"
+                       Grid.Column="1"                   
+                       BackgroundColor="Transparent"
                        Text="{Binding SearchText}"/>
 
             <Frame Grid.Row="1"
@@ -59,9 +81,11 @@
                         <DataTemplate>
                             <ViewCell Height="20">
                                 <Grid>
-                                <Label VerticalTextAlignment="Center"
-                                       FontAttributes="{Binding IsDirectory, Converter={StaticResource BoolToDirectoryFontConverter}}"
-                                       Text="{Binding Caption}"/>
+                                    <Label VerticalTextAlignment="Center"
+                                           FontAttributes="{Binding IsDirectory, Converter={StaticResource BoolToDirectoryFontConverter}}"
+                                           Margin="7,0,0,0"
+                                           FontSize="20"
+                                           Text="{Binding Caption}"/>
                                     <Grid.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding Source={Reference MainPg}, Path=BindingContext.ProcessSelectTrackListItemCmd}"
                                                               CommandParameter="{Binding .}"/>
@@ -91,29 +115,50 @@
                    HorizontalTextAlignment="Center"
                    Text="Текущая песня:"/>
 
-            <Button Grid.Row="1"
-                    BackgroundColor="#009900"
-                    HeightRequest="80"
-                    Margin="50,0,50,0"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    FontSize="Large"
-                    Text="{Binding CurrentTrack.Caption}"/>
+            <Frame Grid.Row="1"
+                   BackgroundColor="{Binding PlayState, Converter={StaticResource PlayStateToColorConverter}}"
+                   HeightRequest="42"
+                   Margin="50,0,50,0"
+                   IsEnabled="{Binding PlayState, Converter={StaticResource PlayStateToBoolConverter}}"
+                   Style="{StaticResource CustomButton}">
+
+                <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                    <Image Source="{Binding PlayState, Converter={StaticResource PlayStateToImgSrcConverter}}"/>
+                    <Label TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="Large"
+                           VerticalTextAlignment="Center"
+                           Margin="5,0,0,0"
+                           Text="{Binding CurrentTrack.Caption}"/>
+                </StackLayout>
+
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding PlayStopCmd}"/>
+                </Frame.GestureRecognizers>
+            </Frame>
 
             <Label Grid.Row="2"
                    Margin="0,30,0,0"
                    HorizontalTextAlignment="Center"
                    Text="Следующая песня:"/>
 
-            <Button Grid.Row="3"
-                    BackgroundColor="#990000"
-                    HeightRequest="80"
-                    Margin="50,0,50,0"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    FontSize="Large"
-                    Text="{Binding NextTrack.Caption}"
-                    Command="{Binding OpenNextTrackCmd}"/>
+            <Frame Grid.Row="3"
+                   BackgroundColor="{Binding CanOpenNextTrack, Converter={StaticResource BoolToRedGrayColorConverter}}"
+                   HeightRequest="42"
+                   Margin="50,0,50,0"
+                   IsEnabled="{Binding CanOpenNextTrack}"
+                   Style="{StaticResource CustomButton}">
+                <Label TextColor="White"
+                       FontAttributes="Bold"
+                       FontSize="Large"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"
+                       Text="{Binding NextTrack.Caption}"/>
+
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenNextTrackCmd}"/>
+                </Frame.GestureRecognizers>
+            </Frame>
 
             <Label Grid.Row="4"
                    Margin="0,30,0,0"
@@ -125,7 +170,26 @@
                    Margin="50,0,50,10"
                    Padding="2"
                    BorderColor="LightGray">
-                <ListView />
+                <ListView ItemsSource="{Binding Playlist}"
+                          SelectionMode="Single">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell Height="20">
+                                <Grid>
+                                    <Label Margin="7,0,0,0"
+                                           VerticalTextAlignment="Center"
+                                           FontSize="20"
+                                           Text="{Binding Caption}"/>
+                                    <!--    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={Reference MainPg}, Path=BindingContext.ProcessSelectTrackListItemCmd}"
+                                                              CommandParameter="{Binding .}"/>
+                                    </Grid.GestureRecognizers> -->
+                                </Grid>
+                            </ViewCell>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
             </Frame>
 
             <Grid Grid.Row="6"
@@ -136,10 +200,9 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <Ellipse Grid.Column="0"
-                         WidthRequest="35"
-                         Stroke="LightGray"
-                         Fill="{Binding IsConnected, Converter={StaticResource BoolToRedGreenColorConverter}}"/>
+                <Image Grid.Column="0"
+                       WidthRequest="35"
+                       Source="{Binding IsConnected, Converter={StaticResource BoolToLEDConverter}}"/>
 
                 <Label Grid.Column="1"
                        VerticalTextAlignment="Center"
