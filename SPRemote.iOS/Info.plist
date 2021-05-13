@@ -18,18 +18,22 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>MinimumOSVersion</key>
-	<string>14.5</string>
+	<string>10.3</string>
 	<key>CFBundleDisplayName</key>
-	<string>SPRemote</string>
+	<string>SP Remote</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.zhukovtech.SPRemote</string>
-	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>com.zhukovtech.nspremote</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>CFBundleName</key>
-	<string>SPRemote</string>
+	<string>SP Remote</string>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/AppIcon.appiconset</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>0.1.0</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 </dict>
 </plist>

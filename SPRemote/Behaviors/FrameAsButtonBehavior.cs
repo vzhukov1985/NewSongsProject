@@ -7,8 +7,6 @@ namespace SPRemote.Behaviors
 {
     public class FrameAsButtonBehavior: Behavior<Frame>
     {
-        private Command TapCmd { get; set; }
-
         private TapGestureRecognizer tap;
 
         public static readonly BindableProperty AttachBehaviorProperty =
