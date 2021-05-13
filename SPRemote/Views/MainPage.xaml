@@ -89,6 +89,10 @@
                                     <Grid.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding Source={Reference MainPg}, Path=BindingContext.ProcessSelectTrackListItemCmd}"
                                                               CommandParameter="{Binding .}"/>
+                                        <SwipeGestureRecognizer Direction="Right"
+                                                                Command="{Binding Source={Reference MainPg}, Path=BindingContext.AddTrackToPlaylistCmd}"
+                                                                CommandParameter="{Binding .}"/>
+
                                     </Grid.GestureRecognizers>
                                 </Grid>
                             </ViewCell>
@@ -108,6 +112,8 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition />
+                <RowDefinition Height="35"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="35"/>
             </Grid.RowDefinitions>
 
@@ -160,18 +166,24 @@
                 </Frame.GestureRecognizers>
             </Frame>
 
+
+
             <Label Grid.Row="4"
                    Margin="0,30,0,0"
                    HorizontalTextAlignment="Center"
                    Text="Плейлист:"/>
 
+
+
             <Frame Grid.Row="5"
                    HasShadow="False"
-                   Margin="50,0,50,10"
+                   Margin="50,0,50,0"
                    Padding="2"
                    BorderColor="LightGray">
-                <ListView ItemsSource="{Binding Playlist}"
-                          SelectionMode="Single">
+                <ListView x:Name="Playlist"
+                          ItemsSource="{Binding Playlist}"
+                          SelectionMode="Single"
+                          SelectedItem="{Binding SelectedPlaylistItem, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <ViewCell Height="20">
@@ -180,10 +192,6 @@
                                            VerticalTextAlignment="Center"
                                            FontSize="20"
                                            Text="{Binding Caption}"/>
-                                    <!--    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding Source={Reference MainPg}, Path=BindingContext.ProcessSelectTrackListItemCmd}"
-                                                              CommandParameter="{Binding .}"/>
-                                    </Grid.GestureRecognizers> -->
                                 </Grid>
                             </ViewCell>
                         </DataTemplate>
@@ -193,6 +201,47 @@
             </Frame>
 
             <Grid Grid.Row="6"
+                  Margin="50,0,50,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        Text="Вверх"
+                        Command="{Binding MovePlaylistItemUpCmd}"/>
+                <Button Grid.Column="1"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        Text="Вниз"
+                        Command="{Binding MovePlaylistItemDownCmd}"/>
+                <Button Grid.Column="2"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        Text="Удалить"
+                        Command="{Binding RemovePlaylistItemCmd}"/>
+                <Button Grid.Column="3"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        Text="Очистить"
+                        Command="{Binding ClearPlaylistCmd}"/>
+
+
+            </Grid>
+
+
+            <Button Grid.Row="7"
+                    Margin="50,0,50,0"
+                    BackgroundColor="{Binding AwaitSendingPlaylist, Converter={StaticResource BoolToRedGrayColorConverter}}"
+                    TextColor="White"
+                    Text="Отменить отсылку плейлиста при подключении"
+                    Command="{Binding CancelSendingPlaylistOnConnectCmd}"/>
+
+            <Grid Grid.Row="8"
                   Margin="50,0,50,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

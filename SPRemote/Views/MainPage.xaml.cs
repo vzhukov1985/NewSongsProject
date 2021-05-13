@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SPRemote.ViewModels;
 using Xamarin.Forms;
 
 namespace SPRemote.Views

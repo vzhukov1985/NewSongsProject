@@ -34,8 +34,10 @@
     <OutputPath>bin\iPhoneSimulator\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <MtouchLink>None</MtouchLink>
+    <MtouchLink>SdkOnly</MtouchLink>
     <MtouchArch>x86_64</MtouchArch>
+    <CodesignKey>iPhone Distribution</CodesignKey>
+    <CodesignProvision>SP Remote Distribution</CodesignProvision>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <DebugSymbols>true</DebugSymbols>
@@ -72,48 +74,50 @@
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon1024.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon180.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon167.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon152.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon120.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon87.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon80.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon76.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon60.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon58.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon40.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon29.png">
-      <Visible>false</Visible>
-    </ImageAsset>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon20.png">
-      <Visible>false</Visible>
-    </ImageAsset>
+    <ImageAsset Include="Resources\Assets.xcassets\.DS_Store" />
+    <ImageAsset Include="Resources\Assets.xcassets\AppIcon.appiconset\icon_1024-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_40.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_60.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_58.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_87.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_80.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_120.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_120-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_180.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_20.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_40-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_29.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_58-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_40-2.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_80-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_76.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_152.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_167.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_1024.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_120-2.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_180-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_48.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_55.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_58-2.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_87-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_80-2.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_88.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_100.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_172.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_196.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_216.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_1024-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_16.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_32.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_32-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_64.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_128.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_256.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_256-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_512.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_512-1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\icon_1024-2.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -136,5 +140,9 @@
       <Project>{60C4D2B9-39D8-4E62-9421-33AEFFD0ED85}</Project>
       <Name>SPRemote</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ITunesArtwork Include="iTunesArtwork" />
+    <ITunesArtwork Include="iTunesArtwork%402x" />
   </ItemGroup>
 </Project>

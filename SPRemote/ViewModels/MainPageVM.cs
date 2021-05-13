@@ -130,6 +130,10 @@ namespace SPRemote.ViewModels
             {
                 _playlist = value;
                 OnPropertyChanged("Playlist");
+                Device.BeginInvokeOnMainThread(() => MovePlaylistItemUpCmd.ChangeCanExecute());
+                Device.BeginInvokeOnMainThread(() => MovePlaylistItemDownCmd.ChangeCanExecute());
+                Device.BeginInvokeOnMainThread(() => RemovePlaylistItemCmd.ChangeCanExecute());
+                Device.BeginInvokeOnMainThread(() => ClearPlaylistCmd.ChangeCanExecute());
             }
         }
 
@@ -159,6 +163,41 @@ namespace SPRemote.ViewModels
             }
         }
 
+        private bool _awaitSendingPlaylist;
+        public bool AwaitSendingPlaylist
+        {
+            get { return _awaitSendingPlaylist; }
+            set
+            {
+                _awaitSendingPlaylist = value;
+                OnPropertyChanged("AwaitSendingPlaylist");
+                Device.BeginInvokeOnMainThread(() => CancelSendingPlaylistOnConnectCmd.ChangeCanExecute());
+            }
+        }
+
+        private TrackListItem _selectedPlaylistItem;
+        public TrackListItem SelectedPlaylistItem
+        {
+            get { return _selectedPlaylistItem; }
+            set
+            {
+                _selectedPlaylistItem = value;
+                OnPropertyChanged("SelectedPlaylistItem");
+                if (value != null)
+                {
+                    ProcessSelectTrackListItem(value);
+                }
+                if (!selectPlaylistItemReceived)
+                {
+                    socket.SendMessage("PlaylistItemSelected", Playlist.IndexOf(value).ToString());
+                }
+                Device.BeginInvokeOnMainThread(() => MovePlaylistItemUpCmd.ChangeCanExecute());
+                Device.BeginInvokeOnMainThread(() => MovePlaylistItemDownCmd.ChangeCanExecute());
+                Device.BeginInvokeOnMainThread(() => RemovePlaylistItemCmd.ChangeCanExecute());
+            }
+        }
+
+
 
 
 
@@ -166,6 +205,7 @@ namespace SPRemote.ViewModels
         private SPClientSocket socket;
         private Timer tmrConnectionChecker;
         private string upDirPath;
+        private bool selectPlaylistItemReceived = false;
 
         private List<TrackListItem> allTracksList;
 
@@ -173,6 +213,16 @@ namespace SPRemote.ViewModels
         public Command ProcessSelectTrackListItemCmd { get; set; }
         public Command OpenNextTrackCmd { get; set; }
         public Command PlayStopCmd { get; set; }
+        public Command AddTrackToPlaylistCmd { get; set; }
+        public Command CancelSendingPlaylistOnConnectCmd { get; set; }
+        public Command MovePlaylistItemUpCmd { get; set; }
+        public Command MovePlaylistItemDownCmd { get; set; }
+        public Command RemovePlaylistItemCmd { get; set; }
+        public Command ClearPlaylistCmd { get; set; }
+
+        public delegate void FocusPlaylist();
+
+        public FocusPlaylist OnPlaylistFocusNeeded { get; set; }
 
         public MainPageVM()
         {
@@ -182,12 +232,71 @@ namespace SPRemote.ViewModels
 
             SearchText = "";
 
+            TrackList = new List<TrackListItem>();
+            Playlist = new List<TrackListItem>();
+
             ProcessSelectTrackListItemCmd = new Command<TrackListItem>(t => ProcessSelectTrackListItem(t));
             UpDirCmd = new Command(_ => socket.SendMessage("RequestDirContents", upDirPath));
             OpenNextTrackCmd = new Command(_ => socket.SendMessage("OpenNextTrack"), _ => CanOpenNextTrack);
             PlayStopCmd = new Command(_ => socket.SendMessage("PlayStop"), _ => PlayState != PlayState.None);
+            AddTrackToPlaylistCmd = new Command<TrackListItem>(t => AddTrackToPlaylistAsync(t));
+            CancelSendingPlaylistOnConnectCmd = new Command(_ => AwaitSendingPlaylist = false, _ => AwaitSendingPlaylist == true);
+            MovePlaylistItemUpCmd = new Command(_ => { MovePlaylistItemUp(); SendPlaylist(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
+            MovePlaylistItemDownCmd = new Command(_ => { MovePlaylistItemDown(); SendPlaylist(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
+            RemovePlaylistItemCmd = new Command(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); SelectedPlaylistItem = null; SendPlaylist(); }, _ => SelectedPlaylistItem != null);
+            ClearPlaylistCmd = new Command(_ => { Playlist = new List<TrackListItem>(); SendPlaylist(); }, _ => Playlist != null && Playlist.Count > 0);
+
 
             CreateConnection();
+        }
+
+        private void MovePlaylistItemUp()
+        {
+            var item = SelectedPlaylistItem;
+            var id = Playlist.IndexOf(SelectedPlaylistItem);
+            Playlist.Remove(item);
+            Playlist.Insert(id - 1, item);
+            Playlist = Playlist.ToList();
+            SelectedPlaylistItem = null;
+            SelectedPlaylistItem = Playlist[id-1];
+        }
+
+        private void MovePlaylistItemDown()
+        {
+            var item = SelectedPlaylistItem;
+            var id = Playlist.IndexOf(SelectedPlaylistItem);
+            Playlist.Remove(item);
+            Playlist.Insert(id + 1, item);
+            Playlist = Playlist.ToList();
+            SelectedPlaylistItem = null;
+            SelectedPlaylistItem = Playlist[id+1];
+        }
+
+
+        private async void AddTrackToPlaylistAsync(TrackListItem track)
+        {
+            await Task.Run(() =>
+            {
+            if (Playlist.FirstOrDefault(t => t.FullPath == track.FullPath) == null)
+                {
+                    Playlist.Add(track);
+                    Playlist = Playlist.ToList();
+                    SendPlaylist();
+                    SelectedPlaylistItem = track;
+                }
+            });
+        }
+
+        private void SendPlaylist()
+        {
+            if (IsConnected)
+            {
+                socket.SendMessage("Playlist", JsonConvert.SerializeObject(Playlist));
+            }
+            else
+            {
+                AwaitSendingPlaylist = true;
+            }
         }
 
         private void CreateConnection()
@@ -235,7 +344,12 @@ namespace SPRemote.ViewModels
 
         private void OnConnected()
         {
-            socket.SendMessage("ClientConnected");
+            socket.SendMessage("ClientConnected", AwaitSendingPlaylist ? "1" : "0");
+            if (AwaitSendingPlaylist)
+            {
+                socket.SendMessage("Playlist", JsonConvert.SerializeObject(Playlist));
+                AwaitSendingPlaylist = false;
+            }
         }
 
         private async void OnMessageReceived(string header, string data)
@@ -257,8 +371,21 @@ namespace SPRemote.ViewModels
                 case "PlayStatus":
                     await Task.Run(() => PlayState = data == "1" ? PlayState.Playing : PlayState.Stopped);
                     break;
+                case "PlaylistItemSelected":
+                    SelectPlaylistItem(int.Parse(data));
+                    break;
                 default:
                     break;
+            }
+        }
+
+        private void SelectPlaylistItem(int index)
+        {
+            if (index != -1 && Playlist.Count > index)
+            {
+                selectPlaylistItemReceived = true;
+                SelectedPlaylistItem = Playlist[index];
+                selectPlaylistItemReceived = false;
             }
         }
 
