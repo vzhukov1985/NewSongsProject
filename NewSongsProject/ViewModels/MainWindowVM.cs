@@ -223,6 +223,10 @@ namespace NewSongsProject.ViewModels
             {
                 _selectedPlaylistItem = value;
                 OnPropertyChanged("SelectedPlaylistItem");
+                if (value != null)
+                {
+                    spRemoteSocket.BroadcastMessage("PlaylistItemSelected", Playlist.IndexOf(value).ToString());
+                }
             }
         }
 
@@ -502,7 +506,10 @@ namespace NewSongsProject.ViewModels
                     SendDirContentsToSPRemote(socket, appSettings.ProjectsPath);
                     SendCurrentTrackToSPRemote(OpenedTrack, socket);
                     SendNextTrackToSPRemote(socket);
-                    SendPlaylistToSPRemote(socket);
+                    if (data == "0")
+                    {
+                        SendPlaylistToSPRemote(socket);
+                    }
                     SendPlayStatusToSPRemote(socket);
                     break;
                 case "RequestDirContents":
@@ -520,8 +527,23 @@ namespace NewSongsProject.ViewModels
                 case "PlayStop":
                     Application.Current.Dispatcher.Invoke(() => PlayStop());
                     break;
+                case "Playlist":
+                    Playlist = JsonConvert.DeserializeObject<List<TrackListItem>>(data);
+                    break;
+                case "PlaylistItemSelected":
+                    SelectPlaylistItemBySPRemote(int.Parse(data));
+                    break;
+
                 default:
                     break;
+            }
+        }
+
+        private void SelectPlaylistItemBySPRemote(int index)
+        {
+            if (index != -1 && Playlist.Count > index)
+            {
+                SelectedPlaylistItem = Playlist[index];
             }
         }
 
