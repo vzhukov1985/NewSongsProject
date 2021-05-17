@@ -74,6 +74,29 @@ namespace SPInfo.ViewModels
             }
         }
 
+        private TrackListItem _currentTrackInfo;
+        public TrackListItem CurrentTrackInfo
+        {
+            get { return _currentTrackInfo; }
+            set
+            {
+                _currentTrackInfo = value;
+                OnPropertyChanged("CurrentTrackInfo");
+            }
+        }
+
+        private TrackListItem _nextTrackInfo;
+        public TrackListItem NextTrackInfo
+        {
+            get { return _nextTrackInfo; }
+            set
+            {
+                _nextTrackInfo = value;
+                OnPropertyChanged("NextTrackInfo");
+            }
+        }
+
+
 
 
 
@@ -84,8 +107,6 @@ namespace SPInfo.ViewModels
         private ISettings _settings;
         private IGlobalStates _globalStates;
 
-        private TrackListItem currentTrackInfo;
-        private TrackListItem nextTrackInfo;
 
         public Command ShowSettingsCmd { get; set; }
 
@@ -112,8 +133,8 @@ namespace SPInfo.ViewModels
                 CreateConnection();
             }
 
-            CurrentTrack = RecreateTrackName(currentTrackInfo);
-            NextTrack = RecreateTrackName(nextTrackInfo);
+            CurrentTrack = RecreateTrackName(CurrentTrackInfo);
+            NextTrack = RecreateTrackName(NextTrackInfo);
         }
 
         private void CreateConnection()
@@ -147,7 +168,7 @@ namespace SPInfo.ViewModels
 
         private void OnConnected()
         {
-                socket.SendMessage("ClientConnected");
+            socket.SendMessage("ClientConnected");
         }
 
         private async void OnMessageReceived(string header, string data)
@@ -155,12 +176,14 @@ namespace SPInfo.ViewModels
             switch (header)
             {
                 case "CurrentTrack":
-                    currentTrackInfo = JsonConvert.DeserializeObject<TrackListItem>(data);
-                    CurrentTrack = RecreateTrackName(currentTrackInfo);
+                    CurrentTrackInfo = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    if (CurrentTrackInfo.Caption != "Нет")
+                        CurrentTrack = RecreateTrackName(CurrentTrackInfo);
                     break;
                 case "NextTrack":
-                    nextTrackInfo = JsonConvert.DeserializeObject<TrackListItem>(data);
-                    NextTrack = RecreateTrackName(nextTrackInfo);
+                    NextTrackInfo = JsonConvert.DeserializeObject<TrackListItem>(data);
+                    if (NextTrackInfo.Caption != "Нет" && !NextTrackInfo.IsDirectory)
+                        NextTrack = RecreateTrackName(NextTrackInfo);
                     break;
                 case "SetTime":
                     SetTime = TimeSpan.Parse(data);
