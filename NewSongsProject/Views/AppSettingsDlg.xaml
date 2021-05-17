@@ -49,6 +49,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -146,7 +147,14 @@
                 <TextBlock Grid.Column="2"
                            Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat={}{0}%}"/>
             </Grid>
+
+             <Button Grid.Row="6"
+                     Margin="0,5,0,5"
+                     Content="Сбросить размеры главного окна"
+                     Command="{Binding ResetWindowSizeCmd}"/>
+            
         </Grid>
+
 
         <Grid  Grid.Row="1"
                Grid.Column="1"

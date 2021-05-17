@@ -49,14 +49,23 @@ namespace NewSongsProject.Services
             dlg.DataContext = dlgVM;
             if (dlg.ShowDialog() == true)
             {
-                return new AppSettings()
+                var res = new AppSettings()
                 {
                     CakewalkPath = dlgVM.CakewalkPath,
                     ProjectsPath = dlgVM.ProjectsPath,
                     TrackListFontSize = dlgVM.FontSize,
                     MainWindowOpacity = (double)dlgVM.Opacity / 100,
-                    TrackCategories = dlgVM.Categories.ToList()
+                    TrackCategories = dlgVM.Categories.ToList(),
                 };
+
+                if (dlgVM.IsWindowSizeResetted)
+                {
+                    res.MainWindowX = 10;
+                    res.MainWindowY = 10;
+                    res.MainWindowHeight = 300;
+                    res.MainWindowWidth = 300;
+                }
+                return res;
             }
             else
             {

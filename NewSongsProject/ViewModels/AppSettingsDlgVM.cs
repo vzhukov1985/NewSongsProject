@@ -68,9 +68,22 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private bool _isWindowSizeResetted;
+        public bool IsWindowSizeResetted
+        {
+            get { return _isWindowSizeResetted; }
+            set
+            {
+                _isWindowSizeResetted = value;
+                OnPropertyChanged("IsWindowSizeResetted");
+            }
+        }
+
+
         public RelayCommand ShowSelectColorDialogCmd { get; set; }
         public RelayCommand BrowseCakewalkCmd { get; set; }
         public RelayCommand BrowseProjectsPathCmd { get; set; }
+        public RelayCommand ResetWindowSizeCmd { get; set; }
 
         public AppSettingsDlgVM(AppSettings appSettings)
         {
@@ -78,6 +91,7 @@ namespace NewSongsProject.ViewModels
             ProjectsPath = appSettings.ProjectsPath;
             FontSize = appSettings.TrackListFontSize;
             Opacity = (int)(appSettings.MainWindowOpacity * 100);
+            IsWindowSizeResetted = false;
 
             Categories = new List<TrackCategory>();
             foreach (var cat in appSettings.TrackCategories)
@@ -88,6 +102,12 @@ namespace NewSongsProject.ViewModels
             ShowSelectColorDialogCmd = new RelayCommand((cat) => ChangeCategoryColor((TrackCategory)cat));
             BrowseCakewalkCmd = new RelayCommand(_ => BrowseCakewalk());
             BrowseProjectsPathCmd = new RelayCommand(_ => BrowseProjectsPath());
+            ResetWindowSizeCmd = new RelayCommand(_ => ResetWindowSize());
+        }
+
+        private void ResetWindowSize()
+        {
+            IsWindowSizeResetted = true;
         }
 
         private void BrowseCakewalk()

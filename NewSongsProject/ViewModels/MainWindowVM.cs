@@ -198,8 +198,11 @@ namespace NewSongsProject.ViewModels
             get { return _loungeFilter; }
             set
             {
-                _loungeFilter = value;
-                if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
+                if (_loungeFilter != value)
+                {
+                    _loungeFilter = value;
+                    if (string.IsNullOrEmpty(SearchText)) ProcessSearch();
+                }
                 OnPropertyChanged("LoungeFilter");
             }
         }
@@ -454,7 +457,7 @@ namespace NewSongsProject.ViewModels
             AlterVocalsFilterCmd = new RelayCommand((ind) => AlterVocalsFilter((int)ind));
             AlterTracksColoredStateCmd = new RelayCommand(_ => AreTracksColored = !AreTracksColored);
 
-            AddTrackToPlaylistCmd = new RelayCommand(_ => { Playlist.Add(new TrackListItem(SelectedTrackListItem)); Playlist = Playlist.ToList(); if (Playlist.Count == 1) SelectedPlaylistItem = Playlist[0]; SendPlaylistToSPRemote(); }, _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
+            AddTrackToPlaylistCmd = new RelayCommand(_ => AddTrackToPlaylist(), _ => SelectedTrackListItem != null && !SelectedTrackListItem.IsDirectory);
             MovePlaylistItemUpCmd = new RelayCommand(_ => { MovePlaylistItemUp(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) > 0);
             MovePlaylistItemDownCmd = new RelayCommand(_ => { MovePlaylistItemDown(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null && Playlist.IndexOf(SelectedPlaylistItem) < Playlist.Count - 1);
             RemovePlaylistItemCmd = new RelayCommand(_ => { Playlist.Remove(SelectedPlaylistItem); Playlist = Playlist.ToList(); SendPlaylistToSPRemote(); }, _ => SelectedPlaylistItem != null);
@@ -497,6 +500,28 @@ namespace NewSongsProject.ViewModels
 
             ChangeDirectory(currentPath);
         }
+
+        private void AddTrackToPlaylist()
+        {
+            var newPlaylistItem = new TrackListItem(SelectedTrackListItem);
+            Playlist.Add(newPlaylistItem); 
+            Playlist = Playlist.ToList();
+            SelectedPlaylistItem = newPlaylistItem;
+            SendPlaylistToSPRemote();
+
+            if (CategoriesFilter.FilteredList.Count != 10)
+                AlterCategoryFilter(-1);
+            if (VocalsFilter.FilteredList.Count != 3)
+                AlterVocalsFilter(-1);
+
+            LoungeFilter = false;
+            if (SearchText != null && SearchText != "")
+            {
+                SearchText = "";
+                ProcessSearch(SelectedTrackListItem.FullPath);
+            }
+        }
+    
 
         private void OnSPRemoteMessageReceived(EzSocket socket, string header, string data)
         {
@@ -974,6 +999,15 @@ namespace NewSongsProject.ViewModels
                 TrackListFontSize = appSettings.TrackListFontSize;
                 MainWindowOpacity = appSettings.MainWindowOpacity;
                 CategoriesList = appSettings.TrackCategories;
+                
+                if (appSettings.MainWindowX == 10)
+                {
+                    MainWindowX = appSettings.MainWindowX;
+                    MainWindowY = appSettings.MainWindowY;
+                    MainWindowHeight = appSettings.MainWindowHeight;
+                    MainWindowWidth = appSettings.MainWindowWidth;
+                }
+
             }
         }
 
@@ -1140,7 +1174,7 @@ namespace NewSongsProject.ViewModels
             }
         }
 
-        private void ProcessTrackListItem()
+        private async void ProcessTrackListItem()
         {
             if (SelectedTrackListItem == null)
                 return;
@@ -1154,17 +1188,24 @@ namespace NewSongsProject.ViewModels
             {
                 if (Path.GetExtension(SelectedTrackListItem.FullPath) == ".cwp")
                 {
-                    OpenCwpProject(SelectedTrackListItem.FullPath);
+                    SendCurrentTrackToSPInfo(SelectedTrackListItem.Caption);
+                    await Task.Run(() => OpenCwpProject(SelectedTrackListItem.FullPath));
                 }
             }
 
             var selectedTrackListItemPath = SelectedTrackListItem.FullPath;
+           
+            if (CategoriesFilter.FilteredList.Count != 10)
+                AlterCategoryFilter(-1);
+            if (VocalsFilter.FilteredList.Count != 3)
+                AlterVocalsFilter(-1);
 
-            SearchText = "";
-            AlterCategoryFilter(-1);
-            AlterVocalsFilter(-1);
             LoungeFilter = false;
-            ProcessSearch();
+            if (SearchText != null && SearchText != "")
+            {
+                SearchText = "";
+                ProcessSearch();
+            }
 
             if (SelectedPlaylistItem != null)
             {

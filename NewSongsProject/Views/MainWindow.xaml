@@ -47,6 +47,7 @@
         <conv:OneIndexConverter x:Key="OneIndexConverter"/>
         <conv:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
         <conv:TrackCategoryToColorConverter x:Key="TrackCategoryToColorConverter"/>
+        <conv:PlaylistIndexCaptionConverter x:Key="PlaylistIndexCaptionConverter"/>
     </Window.Resources>
 
     <Window.InputBindings>
@@ -431,6 +432,7 @@
                 <ListView Grid.Row="0"
                           Grid.Column="0"
                           Grid.ColumnSpan="6"
+                          x:Name="PlaylistView"
                           ItemsSource="{Binding Playlist}"
                           SelectedItem="{Binding SelectedPlaylistItem}"
                           ScrollViewer.VerticalScrollBarVisibility="Visible"
@@ -441,9 +443,9 @@
                         <DataTemplate>
                             <TextBlock FontSize="{Binding DataContext.TrackListFontSize, ElementName=MainWnd}" Width="160">
                                 <TextBlock.Text>
-                                    <MultiBinding StringFormat="{}{0}. {1}">
-                                        <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource AncestorType=ListViewItem}" Converter="{StaticResource OneIndexConverter}" />
-                                        <Binding Path="Caption"/>
+                                    <MultiBinding Converter="{StaticResource PlaylistIndexCaptionConverter}">
+                                        <Binding Path="." />
+                                        <Binding ElementName="PlaylistView" Path="."/>
                                     </MultiBinding>
                                 </TextBlock.Text>
 
