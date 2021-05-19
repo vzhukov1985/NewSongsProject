@@ -572,7 +572,7 @@ namespace NewSongsProject.ViewModels
             }
         }
 
-        private void SendPlayStatusToSPRemote(EzSocket socket = null)
+        private async void SendPlayStatusToSPRemote(EzSocket socket = null)
         {
             if (socket == null)
             {
@@ -1086,8 +1086,7 @@ namespace NewSongsProject.ViewModels
                 return;
             }
 
-            var fullCaption = title.ToString();
-
+            var fullCaption = title.ToString().Replace("*", "");
 
             try
             {
