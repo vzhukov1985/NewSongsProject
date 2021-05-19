@@ -214,6 +214,8 @@ namespace NewSongsProject.ViewModels
             set
             {
                 _playlist = value;
+                if (!firstTimeLoadPlaylist)
+                    SaveLastPlaylist();
                 OnPropertyChanged("Playlist");
             }
         }
@@ -349,6 +351,7 @@ namespace NewSongsProject.ViewModels
         private List<TrackListItem> allTracksList;
         private List<AdditionalTrackInfo> additionalTrackInfos;
         private TimeSpan lastTrackStopTime;
+        private bool firstTimeLoadPlaylist;
 
 
         private IntPtr mainWndHandle;
@@ -409,9 +412,12 @@ namespace NewSongsProject.ViewModels
         public MainWindowVM()
         {
             searchSmph = new SemaphoreSlim(1);
-            Playlist = new List<TrackListItem>();
             additionalTrackInfos = new List<AdditionalTrackInfo>();
             LoadAppSettings();
+            firstTimeLoadPlaylist = true;
+            LoadLastPlaylist();
+            firstTimeLoadPlaylist = false;
+
 
             RunCakwalkIfNotRunning();
 
@@ -504,7 +510,7 @@ namespace NewSongsProject.ViewModels
         private void AddTrackToPlaylist()
         {
             var newPlaylistItem = new TrackListItem(SelectedTrackListItem);
-            Playlist.Add(newPlaylistItem); 
+            Playlist.Add(newPlaylistItem);
             Playlist = Playlist.ToList();
             SelectedPlaylistItem = newPlaylistItem;
             SendPlaylistToSPRemote();
@@ -521,7 +527,7 @@ namespace NewSongsProject.ViewModels
                 ProcessSearch(SelectedTrackListItem.FullPath);
             }
         }
-    
+
 
         private void OnSPRemoteMessageReceived(EzSocket socket, string header, string data)
         {
@@ -574,94 +580,110 @@ namespace NewSongsProject.ViewModels
 
         private async void SendPlayStatusToSPRemote(EzSocket socket = null)
         {
-            if (socket == null)
+            await Task.Run(() =>
             {
-                spRemoteSocket.BroadcastMessage("PlayStatus", IsPlaying ? "1" : "0");
-            }
-            else
-            {
-                spRemoteSocket.SendMessageToClient(socket, "PlayStatus", IsPlaying ? "1" : "0");
-            }
+                if (socket == null)
+                {
+                    spRemoteSocket.BroadcastMessage("PlayStatus", IsPlaying ? "1" : "0");
+                }
+                else
+                {
+                    spRemoteSocket.SendMessageToClient(socket, "PlayStatus", IsPlaying ? "1" : "0");
+                }
+            });
         }
 
-        private void SendPlaylistToSPRemote(EzSocket socket = null)
+        private async void SendPlaylistToSPRemote(EzSocket socket = null)
         {
-            if (Playlist != null)
+            await Task.Run(() =>
+            {
+                if (Playlist != null)
+                {
+                    if (SelectedTrackListItem != null)
+                    {
+                        if (socket == null)
+                        {
+                            spRemoteSocket.BroadcastMessage("Playlist", JsonConvert.SerializeObject(Playlist));
+                        }
+                        else
+                        {
+                            spRemoteSocket.SendMessageToClient(socket, "Playlist", JsonConvert.SerializeObject(Playlist));
+                        }
+                    }
+                }
+            }
+            );
+        }
+
+        private async void SendNextTrackToSPRemote(EzSocket socket = null)
+        {
+            await Task.Run(() =>
             {
                 if (SelectedTrackListItem != null)
                 {
                     if (socket == null)
                     {
-                        spRemoteSocket.BroadcastMessage("Playlist", JsonConvert.SerializeObject(Playlist));
+                        spRemoteSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
                     }
                     else
                     {
-                        spRemoteSocket.SendMessageToClient(socket, "Playlist", JsonConvert.SerializeObject(Playlist));
+                        spRemoteSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
                     }
                 }
-            }
+            });
         }
 
-        private void SendNextTrackToSPRemote(EzSocket socket = null)
+        private async void SendCurrentTrackToSPRemote(string trackCaption, EzSocket socket = null)
         {
-            if (SelectedTrackListItem != null)
+            await Task.Run(() =>
             {
-                if (socket == null)
+                if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
                 {
-                    spRemoteSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
-                }
-                else
-                {
-                    spRemoteSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
-                }
-            }
-        }
+                    TrackListItem curTrack = null;
+                    curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
 
-        private void SendCurrentTrackToSPRemote(string trackCaption, EzSocket socket = null)
-        {
-            if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
-            {
-                TrackListItem curTrack = null;
-                curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
-
-                if (curTrack == null)
-                {
-                    curTrack = new TrackListItem()
+                    if (curTrack == null)
                     {
-                        Caption = "Нет",
-                        Category = 0,
-                        FullName = "Нет",
-                        FullPath = "Нет",
-                        IsDirectory = false,
-                        IsLounge = false,
-                        Key = "",
-                        Tags = new List<string>(),
-                        Tempo = 0,
-                        TimesOpened = 0,
-                        VocalType = VocalType.Duet
-                    };
+                        curTrack = new TrackListItem()
+                        {
+                            Caption = "Нет",
+                            Category = 0,
+                            FullName = "Нет",
+                            FullPath = "Нет",
+                            IsDirectory = false,
+                            IsLounge = false,
+                            Key = "",
+                            Tags = new List<string>(),
+                            Tempo = 0,
+                            TimesOpened = 0,
+                            VocalType = VocalType.Duet
+                        };
+                    }
+                    if (socket == null)
+                    {
+                        spRemoteSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                    }
+                    else
+                    {
+                        spRemoteSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                    }
                 }
-                if (socket == null)
-                {
-                    spRemoteSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
-                }
-                else
-                {
-                    spRemoteSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
-                }
-            }
+            });
         }
 
-        private void SendDirContentsToSPRemote(EzSocket socket, string path)
+        private async void SendDirContentsToSPRemote(EzSocket socket, string path)
         {
-            var dirContents = new DirContentsDto()
+            await Task.Run(() =>
             {
-                TrackListItems = GetDirectoryTracks(path),
-                IsTopDir = path == appSettings.ProjectsPath,
-                UpDirPath = Directory.GetParent(path).FullName
-            };
+                var dirContents = new DirContentsDto()
+                {
+                    TrackListItems = GetDirectoryTracks(path),
+                    IsTopDir = path == appSettings.ProjectsPath,
+                    UpDirPath = Directory.GetParent(path).FullName
+                };
 
-            spRemoteSocket.SendMessageToClient(socket, "DirContents", JsonConvert.SerializeObject(dirContents));
+                spRemoteSocket.SendMessageToClient(socket, "DirContents", JsonConvert.SerializeObject(dirContents));
+            });
         }
 
         private List<TrackListItem> GetDirectoryTracks(string path)
@@ -709,75 +731,87 @@ namespace NewSongsProject.ViewModels
 
         }
 
-        private void SendTrackListToSPInfo()
+        private async void SendTrackListToSPInfo()
         {
-            if ((DateTime.Now - lastSPInfoSendTrackListTime).TotalSeconds < 2)
-                return;
-            lastSPInfoSendTrackListTime = DateTime.Now;
-            var trackListToSend = TrackList.Where(t => !t.IsDirectory).ToList();
-            spInfoSocket.BroadcastMessage("TrackList", JsonConvert.SerializeObject(trackListToSend));
+            await Task.Run(() =>
+            {
+                if ((DateTime.Now - lastSPInfoSendTrackListTime).TotalSeconds < 2)
+                    return;
+                lastSPInfoSendTrackListTime = DateTime.Now;
+                var trackListToSend = TrackList.Where(t => !t.IsDirectory).ToList();
+                spInfoSocket.BroadcastMessage("TrackList", JsonConvert.SerializeObject(trackListToSend));
+            });
         }
 
-        private void SendSetTimeToSPInfo(TimeSpan setTime, EzSocket socket = null)
+        private async void SendSetTimeToSPInfo(TimeSpan setTime, EzSocket socket = null)
         {
-            if (socket == null)
+            await Task.Run(() =>
             {
-                spInfoSocket.BroadcastMessage("SetTime", setTime.ToString());
-            }
-            else
-            {
-                spInfoSocket.SendMessageToClient(socket, "SetTime", setTime.ToString());
-            }
-        }
-
-        private void SendCurrentTrackToSPInfo(string trackCaption, EzSocket socket = null)
-        {
-            if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
-            {
-                TrackListItem curTrack = null;
-                curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
-
-                if (curTrack == null)
+                if (socket == null)
                 {
-                    curTrack = new TrackListItem()
+                    spInfoSocket.BroadcastMessage("SetTime", setTime.ToString());
+                }
+                else
+                {
+                    spInfoSocket.SendMessageToClient(socket, "SetTime", setTime.ToString());
+                }
+            });
+        }
+
+        private async void SendCurrentTrackToSPInfo(string trackCaption, EzSocket socket = null)
+        {
+            await Task.Run(() =>
+           {
+               if (!string.IsNullOrEmpty(trackCaption) && allTracksList != null && spInfoSocket != null)
+               {
+                   TrackListItem curTrack = null;
+                   curTrack = allTracksList.FirstOrDefault(t => t.Caption == trackCaption);
+
+                   if (curTrack == null)
+                   {
+                       curTrack = new TrackListItem()
+                       {
+                           Caption = "Нет",
+                           Category = 0,
+                           FullName = "Нет",
+                           FullPath = "Нет",
+                           IsDirectory = false,
+                           IsLounge = false,
+                           Key = "",
+                           Tags = new List<string>(),
+                           Tempo = 0,
+                           TimesOpened = 0,
+                           VocalType = VocalType.Duet
+                       };
+                   }
+                   if (socket == null)
+                   {
+                       spInfoSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                   }
+                   else
+                   {
+                       spInfoSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
+                   }
+               }
+           });
+        }
+
+        private async void SendNextTrackToSPInfo(EzSocket socket = null)
+        {
+            await Task.Run(() =>
+            {
+                if (SelectedTrackListItem != null)
+                {
+                    if (socket == null)
                     {
-                        Caption = "Нет",
-                        Category = 0,
-                        FullName = "Нет",
-                        FullPath = "Нет",
-                        IsDirectory = false,
-                        IsLounge = false,
-                        Key = "",
-                        Tags = new List<string>(),
-                        Tempo = 0,
-                        TimesOpened = 0,
-                        VocalType = VocalType.Duet
-                    };
+                        spInfoSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                    }
+                    else
+                    {
+                        spInfoSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
+                    }
                 }
-                if (socket == null)
-                {
-                    spInfoSocket.BroadcastMessage("CurrentTrack", JsonConvert.SerializeObject(curTrack));
-                }
-                else
-                {
-                    spInfoSocket.SendMessageToClient(socket, "CurrentTrack", JsonConvert.SerializeObject(curTrack));
-                }
-            }
-        }
-
-        private void SendNextTrackToSPInfo(EzSocket socket = null)
-        {
-            if (SelectedTrackListItem != null)
-            {
-                if (socket == null)
-                {
-                    spInfoSocket.BroadcastMessage("NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
-                }
-                else
-                {
-                    spInfoSocket.SendMessageToClient(socket, "NextTrack", JsonConvert.SerializeObject(SelectedTrackListItem));
-                }
-            }
+            });
         }
 
         private void OnSPInfoMessageReceived(EzSocket socket, string header, string data)
@@ -999,7 +1033,7 @@ namespace NewSongsProject.ViewModels
                 TrackListFontSize = appSettings.TrackListFontSize;
                 MainWindowOpacity = appSettings.MainWindowOpacity;
                 CategoriesList = appSettings.TrackCategories;
-                
+
                 if (appSettings.MainWindowX == 10)
                 {
                     MainWindowX = appSettings.MainWindowX;
@@ -1193,7 +1227,7 @@ namespace NewSongsProject.ViewModels
             }
 
             var selectedTrackListItemPath = SelectedTrackListItem.FullPath;
-           
+
             if (CategoriesFilter.FilteredList.Count != 10)
                 AlterCategoryFilter(-1);
             if (VocalsFilter.FilteredList.Count != 3)
@@ -1386,6 +1420,27 @@ namespace NewSongsProject.ViewModels
             }
         }
 
+        private void LoadLastPlaylist()
+        {
+            string lastPlaylistPath = AppDomain.CurrentDomain.BaseDirectory + "\\LastPlaylist.json";
+            if (File.Exists(lastPlaylistPath))
+            {
+                Playlist = JsonConvert.DeserializeObject<List<TrackListItem>>(File.ReadAllText(lastPlaylistPath));
+            }
+            else
+            {
+                Playlist = new List<TrackListItem>();
+            }
+        }
+
+        private async void SaveLastPlaylist()
+        {
+            await Task.Run(() =>
+            {
+                string lastPlaylistPath = AppDomain.CurrentDomain.BaseDirectory + "\\LastPlaylist.json";
+                File.WriteAllText(lastPlaylistPath, JsonConvert.SerializeObject(Playlist));
+            });
+        }
         private void SaveAppSettings()
         {
             appSettings.InitialPath = currentPath;
