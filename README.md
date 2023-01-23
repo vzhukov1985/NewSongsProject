@@ -1,11 +1,11 @@
 # NewSongsProject
 Система управления воспроизведением песен
 
-#NewSongsProject
+# NewSongsProject
 Desktop-приложение для управления
 
-#SPInfo
+# SPInfo
 Мобильное приложение для отображения необходимой информации
 
-#SPRemote
+# SPRemote
 Мобильное приложение для iPad для удаленнного управления Desktop-приложением
